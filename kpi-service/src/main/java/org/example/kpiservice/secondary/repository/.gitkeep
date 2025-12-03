@@ -1,0 +1,4 @@
+package org.example.kpiservice.secondary.repository;
+
+// Placeholder file - User will create secondary database repositories here
+// These repositories will use the secondaryEntityManagerFactory
