@@ -16,7 +16,7 @@ CREATE TABLE employees (
     gender VARCHAR(20),
     nid VARCHAR(50),
     tin_number VARCHAR(50),
-    blood_group VARCHAR(10),
+    blood_group VARCHAR(20),
     status VARCHAR(20) NOT NULL,
     created_by BIGINT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

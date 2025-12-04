@@ -13,7 +13,7 @@ import java.time.ZonedDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "teams")
+@Table(name = "team")
 public class Team {
 
     @Id
