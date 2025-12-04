@@ -21,7 +21,7 @@ public class KPIParameter extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "kpi_id", nullable = false)
     private KPI kpi;
-
+    
     @Column(name = "name", nullable = false, length = 255)
     private String name;
 
