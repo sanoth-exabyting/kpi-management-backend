@@ -1,7 +1,9 @@
 package org.example.kpiservice.service;
 
 import org.example.kpiservice.dtos.request.LoginRequest;
+import org.example.kpiservice.dtos.request.RegisterRequest;
 import org.example.kpiservice.dtos.response.LoginResponse;
+import org.example.kpiservice.dtos.response.RegisterResponse;
 
 import java.util.Optional;
 
@@ -17,4 +19,12 @@ public interface AuthService {
      * @return Optional containing LoginResponse with JWT token and employee details
      */
     Optional<LoginResponse> login(LoginRequest request);
+
+    /**
+     * Register a new employee with email and password
+     *
+     * @param request Registration request containing email and password
+     * @return RegisterResponse with employee details and success message
+     */
+    RegisterResponse register(RegisterRequest request);
 }

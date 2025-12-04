@@ -56,7 +56,7 @@ public class Employee extends BaseEntity {
     private String tinNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "blood_group", length = 10)
+    @Column(name = "blood_group", length = 20)
     private BloodGroup bloodGroup;
 
     @Enumerated(EnumType.STRING)
