@@ -1,5 +1,6 @@
 package org.example.kpiservice.service;
 
+import org.example.kpiservice.dtos.request.EmailPasswordLoginRequest;
 import org.example.kpiservice.dtos.request.LoginRequest;
 import org.example.kpiservice.dtos.request.RegisterRequest;
 import org.example.kpiservice.dtos.response.LoginResponse;
@@ -19,6 +20,14 @@ public interface AuthService {
      * @return Optional containing LoginResponse with JWT token and employee details
      */
     Optional<LoginResponse> login(LoginRequest request);
+
+    /**
+     * Authenticate user with email and password
+     *
+     * @param request Login request containing email and password
+     * @return LoginResponse with JWT token and employee details
+     */
+    LoginResponse loginWithEmailPassword(EmailPasswordLoginRequest request);
 
     /**
      * Register a new employee with email and password

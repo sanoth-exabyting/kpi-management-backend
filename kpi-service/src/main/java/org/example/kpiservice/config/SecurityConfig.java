@@ -38,6 +38,7 @@ public class SecurityConfig {
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
+                                                                "/api/v1/auth/login",
                                                                 "/api/v1/auth/login/google",
                                                                 "/api/v1/auth/register",
                                                                 "/v3/api-docs/**",

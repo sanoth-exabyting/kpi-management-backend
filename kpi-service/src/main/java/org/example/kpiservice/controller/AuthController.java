@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.kpiservice.dtos.ApiResponseEntity;
+import org.example.kpiservice.dtos.request.EmailPasswordLoginRequest;
 import org.example.kpiservice.dtos.request.LoginRequest;
 import org.example.kpiservice.dtos.request.RegisterRequest;
 import org.example.kpiservice.dtos.response.LoginResponse;
@@ -27,6 +29,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+
+    @Operation(summary = "Login with Email and Password", description = "Authenticate user with email and password and receive JWT access token", responses = {
+            @ApiResponse(responseCode = "200", description = "Successfully authenticated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid input", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid credentials", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Account terminated", content = @Content)
+    })
+    @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponseEntity<LoginResponse, Void>> loginWithEmailPassword(
+            @Valid @RequestBody EmailPasswordLoginRequest request) {
+        LoginResponse response = authService.loginWithEmailPassword(request);
+        return ApiResponseEntity.ok(response);
+    }
 
     @Operation(summary = "Google OAuth Login", description = "Authenticate user with Google OAuth token and receive JWT access token", responses = {
             @ApiResponse(responseCode = "201", description = "Successfully authenticated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))),
