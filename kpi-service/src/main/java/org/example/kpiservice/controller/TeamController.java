@@ -10,8 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.example.kpiservice.dtos.ApiResponseEntity;
 import org.example.kpiservice.dtos.response.TeamResponse;
-import org.example.kpiservice.security.JwtUtil;
 import org.example.kpiservice.service.TeamService;
+import org.example.kpiservice.util.JwtHelper;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,7 +28,7 @@ import java.util.Map;
 public class TeamController {
 
     private final TeamService teamService;
-    private final JwtUtil jwtUtil;
+    private final JwtHelper jwtHelper;
 
     @Operation(summary = "Get User Teams", description = "Get list of teams that the authenticated user belongs to", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved teams", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TeamResponse.class))),
@@ -36,17 +36,10 @@ public class TeamController {
     })
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponseEntity<List<TeamResponse>, Void>> getUserTeams(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        String token = authHeader != null && authHeader.startsWith("Bearer ")
-                ? authHeader.substring(7)
-                : null;
+        // Extract teams from JWT
+        List<Map<String, Object>> teams = jwtHelper.extractTeams(request);
 
-        if (token == null) {
-            return ApiResponseEntity.ok(List.of());
-        }
-
-        // Extract team IDs from JWT token
-        List<Map<String, Object>> teams = jwtUtil.extractTeams(token);
+        // Extract team IDs
         List<Long> teamIds = teams.stream()
                 .map(team -> {
                     Object teamId = team.get("team_id");

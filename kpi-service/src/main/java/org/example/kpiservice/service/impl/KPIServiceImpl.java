@@ -86,6 +86,38 @@ public class KPIServiceImpl implements KPIService {
         return mapToResponse(savedKPI);
     }
 
+    @Override
+    public List<KPIResponse> getUserKPIs(List<Map<String, Object>> teams) {
+        // Extract team IDs from teams array
+        List<Long> teamIds = teams.stream()
+                .map(team -> {
+                    Object teamId = team.get("team_id");
+                    if (teamId instanceof Integer) {
+                        return ((Integer) teamId).longValue();
+                    } else if (teamId instanceof Long) {
+                        return (Long) teamId;
+                    }
+                    return null;
+                })
+                .filter(id -> id != null)
+                .toList();
+
+        // If no teams, return empty list
+        if (teamIds.isEmpty()) {
+            return List.of();
+        }
+
+        // Get ACTIVE KPIs for user's teams
+        List<KPI> kpis = kpiRepository.findAllByTeamIdInAndStatus(teamIds, KPIStatus.ACTIVE);
+
+        log.info("Retrieved {} ACTIVE KPIs for user's {} team(s)", kpis.size(), teamIds.size());
+
+        // Map to response
+        return kpis.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     private KPIResponse mapToResponse(KPI kpi) {
         return KPIResponse.builder()
                 .id(kpi.getId())
