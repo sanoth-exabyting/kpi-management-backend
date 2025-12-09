@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.kpiservice.dtos.ApiResponseEntity;
 import org.example.kpiservice.dtos.request.CreateKPIParameterRequest;
+import org.example.kpiservice.dtos.request.UpdateKPIParameterRequest;
 import org.example.kpiservice.dtos.response.KPIParameterResponse;
 import org.example.kpiservice.service.KPIParameterService;
 import org.example.kpiservice.util.JwtHelper;
@@ -76,5 +77,55 @@ public class KPIParameterController {
         List<KPIParameterResponse> parameters = kpiParameterService.getKPIParameters(kpiId, teams);
 
         return ApiResponseEntity.ok(parameters);
+    }
+
+    @Operation(summary = "Get KPI Parameter by ID", description = "Get a specific KPI parameter by ID. User must be a member of the KPI's team.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved parameter", content = @Content(mediaType = "application/json", schema = @Schema(implementation = KPIParameterResponse.class))),
+            @ApiResponse(responseCode = "404", description = "KPI or parameter not found", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Parameter does not belong to KPI", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Not a team member", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid token", content = @Content)
+    })
+    @GetMapping(value = "/{parameterId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponseEntity<KPIParameterResponse, Void>> getKPIParameterById(
+            @PathVariable Long kpiId,
+            @PathVariable Long parameterId,
+            HttpServletRequest httpRequest) {
+
+        // Extract teams from JWT
+        List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
+
+        // Get KPI parameter
+        KPIParameterResponse parameter = kpiParameterService.getKPIParameterById(kpiId, parameterId, teams);
+
+        return ApiResponseEntity.ok(parameter);
+    }
+
+    @Operation(summary = "Update KPI Parameter", description = "Update KPI parameter details. Only team LEADs can update parameters.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "200", description = "Parameter updated successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = KPIParameterResponse.class))),
+            @ApiResponse(responseCode = "404", description = "KPI or parameter not found", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Parameter does not belong to KPI", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Not a team LEAD", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid token", content = @Content)
+    })
+    @PatchMapping(value = "/{parameterId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponseEntity<KPIParameterResponse, Void>> updateKPIParameter(
+            @PathVariable Long kpiId,
+            @PathVariable Long parameterId,
+            @RequestBody UpdateKPIParameterRequest request,
+            HttpServletRequest httpRequest) {
+
+        // Get authenticated user's email
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
+        // Extract teams from JWT
+        List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
+
+        // Update KPI parameter
+        KPIParameterResponse response = kpiParameterService.updateKPIParameter(kpiId, parameterId, request, userEmail,
+                teams);
+
+        return ApiResponseEntity.ok(response);
     }
 }
