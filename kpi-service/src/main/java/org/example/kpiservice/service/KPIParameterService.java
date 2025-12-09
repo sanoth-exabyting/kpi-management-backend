@@ -55,4 +55,14 @@ public interface KPIParameterService {
      */
     KPIParameterResponse updateKPIParameter(Long kpiId, Long parameterId, UpdateKPIParameterRequest request,
             String userEmail, List<Map<String, Object>> teams);
+
+    /**
+     * Delete KPI parameter (LEAD only)
+     *
+     * @param kpiId       KPI ID
+     * @param parameterId Parameter ID
+     * @param userEmail   Authenticated user's email
+     * @param teams       User's teams from JWT
+     */
+    void deleteKPIParameter(Long kpiId, Long parameterId, String userEmail, List<Map<String, Object>> teams);
 }

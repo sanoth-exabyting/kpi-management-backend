@@ -211,6 +211,50 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 return mapToResponse(updatedParameter);
         }
 
+        @Override
+        @Transactional
+        public void deleteKPIParameter(Long kpiId, Long parameterId, String userEmail,
+                        List<Map<String, Object>> teams) {
+                // Get employee by email
+                Employee employee = employeeRepository.findByEmail(userEmail)
+                                .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
+
+                // Find KPI by ID
+                KPI kpi = kpiRepository.findById(kpiId)
+                                .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
+
+                // Check if user is LEAD of the KPI's team
+                boolean isLead = teams.stream()
+                                .anyMatch(team -> {
+                                        Object teamId = team.get("team_id");
+                                        Object role = team.get("role");
+                                        Long teamIdLong = teamId instanceof Integer ? ((Integer) teamId).longValue()
+                                                        : (Long) teamId;
+                                        return teamIdLong.equals(kpi.getTeamId()) && "LEAD".equals(role);
+                                });
+
+                if (!isLead) {
+                        throw ApiException.create(HttpStatus.FORBIDDEN,
+                                        "You must be a LEAD of team " + kpi.getTeamId() + " to delete KPI parameters");
+                }
+
+                // Find parameter by ID
+                KPIParameter parameter = kpiParameterRepository.findById(parameterId)
+                                .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "Parameter not found"));
+
+                // Verify parameter belongs to the specified KPI
+                if (!parameter.getKpi().getId().equals(kpiId)) {
+                        throw ApiException.create(HttpStatus.BAD_REQUEST,
+                                        "Parameter does not belong to the specified KPI");
+                }
+
+                // Delete parameter
+                kpiParameterRepository.delete(parameter);
+
+                log.info("KPI parameter deleted: {} from KPI: {} by employee: {}", parameterId, kpiId,
+                                employee.getEmployeeId());
+        }
+
         private KPIParameterResponse mapToResponse(KPIParameter parameter) {
                 return KPIParameterResponse.builder()
                                 .id(parameter.getId())

@@ -128,4 +128,30 @@ public class KPIParameterController {
 
         return ApiResponseEntity.ok(response);
     }
+
+    @Operation(summary = "Delete KPI Parameter", description = "Delete a KPI parameter. Only team LEADs can delete parameters.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "200", description = "Parameter deleted successfully", content = @Content),
+            @ApiResponse(responseCode = "404", description = "KPI or parameter not found", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Parameter does not belong to KPI", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Not a team LEAD", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid token", content = @Content)
+    })
+    @DeleteMapping("/{parameterId}")
+    public ResponseEntity<ApiResponseEntity<Void, Void>> deleteKPIParameter(
+            @PathVariable Long kpiId,
+            @PathVariable Long parameterId,
+            HttpServletRequest httpRequest) {
+
+        // Get authenticated user's email
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
+        // Extract teams from JWT
+        List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
+
+        // Delete KPI parameter
+        kpiParameterService.deleteKPIParameter(kpiId, parameterId, userEmail, teams);
+
+        return ApiResponseEntity.ok(null);
+    }
 }
