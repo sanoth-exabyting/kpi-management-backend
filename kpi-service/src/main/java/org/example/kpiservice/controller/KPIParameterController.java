@@ -57,4 +57,24 @@ public class KPIParameterController {
 
         return ApiResponseEntity.created(response);
     }
+
+    @Operation(summary = "Get KPI Parameters", description = "Get list of parameters for a specific KPI. User must be a member of the KPI's team.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = KPIParameterResponse.class))),
+            @ApiResponse(responseCode = "404", description = "KPI not found", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Not a team member", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid token", content = @Content)
+    })
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponseEntity<List<KPIParameterResponse>, Void>> getKPIParameters(
+            @PathVariable Long kpiId,
+            HttpServletRequest httpRequest) {
+
+        // Extract teams from JWT
+        List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
+
+        // Get KPI parameters
+        List<KPIParameterResponse> parameters = kpiParameterService.getKPIParameters(kpiId, teams);
+
+        return ApiResponseEntity.ok(parameters);
+    }
 }

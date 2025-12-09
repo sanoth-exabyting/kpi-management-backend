@@ -22,4 +22,13 @@ public interface KPIParameterService {
      */
     KPIParameterResponse createKPIParameter(Long kpiId, CreateKPIParameterRequest request, String userEmail,
             List<Map<String, Object>> teams);
+
+    /**
+     * Get KPI parameters (team member access)
+     *
+     * @param kpiId KPI ID
+     * @param teams User's teams from JWT
+     * @return List of parameters
+     */
+    List<KPIParameterResponse> getKPIParameters(Long kpiId, List<Map<String, Object>> teams);
 }
