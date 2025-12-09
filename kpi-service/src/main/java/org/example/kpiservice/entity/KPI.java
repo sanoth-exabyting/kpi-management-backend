@@ -9,6 +9,8 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.example.kpiservice.enums.KPIStatus;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
@@ -19,6 +21,8 @@ import java.time.Instant;
         @Index(name = "idx_kpi_status", columnList = "status"),
         @Index(name = "idx_kpi_deleted", columnList = "is_deleted")
 })
+@SQLRestriction("is_deleted = false")
+@SQLDelete(sql = "UPDATE kpis SET is_deleted = true WHERE id = ?")
 @Getter
 @Setter
 @NoArgsConstructor

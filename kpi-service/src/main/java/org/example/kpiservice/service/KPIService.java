@@ -49,4 +49,13 @@ public interface KPIService {
      * @return Updated KPI response
      */
     KPIResponse updateKPI(Long kpiId, UpdateKPIRequest request, String userEmail, List<Map<String, Object>> teams);
+
+    /**
+     * Delete KPI (soft delete, LEAD only)
+     *
+     * @param kpiId     KPI ID
+     * @param userEmail Authenticated user's email
+     * @param teams     User's teams from JWT
+     */
+    void deleteKPI(Long kpiId, String userEmail, List<Map<String, Object>> teams);
 }

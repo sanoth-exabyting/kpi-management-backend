@@ -205,6 +205,9 @@ public class KPIServiceImpl implements KPIService {
             }
             kpi.setEndAt(newEndAt);
         }
+        if (request.getStatus() != null) {
+            kpi.setStatus(request.getStatus());
+        }
 
         // Update audit fields (updated_by and updated_at)
         // Note: created_by and created_at remain unchanged
@@ -217,6 +220,37 @@ public class KPIServiceImpl implements KPIService {
         log.info("KPI updated: {} by employee: {}", kpiId, employee.getEmployeeId());
 
         return mapToResponse(updatedKPI);
+    }
+
+    @Override
+    @Transactional
+    public void deleteKPI(Long kpiId, String userEmail, List<Map<String, Object>> teams) {
+        // Get employee by email
+        Employee employee = employeeRepository.findByEmail(userEmail)
+                .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
+
+        // Find KPI by ID
+        KPI kpi = kpiRepository.findById(kpiId)
+                .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
+
+        // Check if user is LEAD of the KPI's team
+        boolean isLead = teams.stream()
+                .anyMatch(team -> {
+                    Object teamId = team.get("team_id");
+                    Object role = team.get("role");
+                    Long teamIdLong = teamId instanceof Integer ? ((Integer) teamId).longValue() : (Long) teamId;
+                    return teamIdLong.equals(kpi.getTeamId()) && "LEAD".equals(role);
+                });
+
+        if (!isLead) {
+            throw ApiException.create(HttpStatus.FORBIDDEN,
+                    "You must be a LEAD of team " + kpi.getTeamId() + " to delete this KPI");
+        }
+
+        // Soft delete (triggers @SQLDelete which sets is_deleted = true)
+        kpiRepository.delete(kpi);
+
+        log.info("KPI soft deleted: {} by employee: {}", kpiId, employee.getEmployeeId());
     }
 
     private KPIResponse mapToResponse(KPI kpi) {

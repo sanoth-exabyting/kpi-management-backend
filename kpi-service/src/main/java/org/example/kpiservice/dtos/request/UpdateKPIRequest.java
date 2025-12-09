@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.kpiservice.enums.KPIStatus;
 
 import java.time.ZonedDateTime;
 
@@ -26,4 +27,7 @@ public class UpdateKPIRequest {
 
     @Schema(description = "KPI end date with timezone", example = "2024-03-31T23:59:59+06:00")
     private ZonedDateTime endAt;
+
+    @Schema(description = "KPI status", example = "ACTIVE")
+    private KPIStatus status;
 }

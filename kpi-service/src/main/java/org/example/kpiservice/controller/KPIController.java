@@ -117,4 +117,26 @@ public class KPIController {
 
                 return ApiResponseEntity.ok(response);
         }
+
+        @Operation(summary = "Delete KPI", description = "Soft delete a KPI. Only team LEADs can delete KPIs.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+                        @ApiResponse(responseCode = "200", description = "KPI deleted successfully", content = @Content),
+                        @ApiResponse(responseCode = "404", description = "KPI not found", content = @Content),
+                        @ApiResponse(responseCode = "403", description = "Forbidden - Not a team LEAD", content = @Content),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid token", content = @Content)
+        })
+        @DeleteMapping("/{kpiId}")
+        public ResponseEntity<ApiResponseEntity<Void, Void>> deleteKPI(
+                        @PathVariable Long kpiId,
+                        HttpServletRequest httpRequest) {
+
+                // Get authenticated user's email
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                String userEmail = authentication.getName();
+
+                List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
+
+                kpiService.deleteKPI(kpiId, userEmail, teams);
+
+                return ApiResponseEntity.ok(null);
+        }
 }
