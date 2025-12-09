@@ -33,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final OAuthProviderService oAuthProviderService;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final org.example.kpiservice.secondary.repository.TeamMemberRepository teamMemberRepository;
 
     @Override
     public Optional<LoginResponse> login(LoginRequest request) {
@@ -58,10 +59,15 @@ public class AuthServiceImpl implements AuthService {
             throw ApiException.create(HttpStatus.FORBIDDEN, "Your account has been terminated. Please contact HR.");
         }
 
-        // Generate JWT token
-        String token = jwtUtil.generateToken(employee.getEmail());
+        // Get user type from TeamMember table in secondary DB
+        String userType = teamMemberRepository.findByEmployeeId(employee.getEmployeeId())
+                .map(teamMember -> teamMember.getRole().name())
+                .orElse(null);
 
-        log.info("User logged in successfully: {}", email);
+        // Generate JWT token with userType
+        String token = jwtUtil.generateToken(employee.getEmail(), userType);
+
+        log.info("User logged in successfully: {} with userType: {}", email, userType);
 
         return LoginResponse.builder()
                 .accessToken(token)

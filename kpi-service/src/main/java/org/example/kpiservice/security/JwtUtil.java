@@ -55,6 +55,14 @@ public class JwtUtil {
         return createToken(claims, username);
     }
 
+    public String generateToken(String username, String userType) {
+        Map<String, Object> claims = new HashMap<>();
+        if (userType != null) {
+            claims.put("userType", userType);
+        }
+        return createToken(claims, username);
+    }
+
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .claims(claims)
