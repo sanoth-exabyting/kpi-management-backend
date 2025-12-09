@@ -3,6 +3,7 @@ package org.example.kpiservice.service;
 import org.example.kpiservice.dtos.request.CreateKPIParameterRequest;
 import org.example.kpiservice.dtos.request.CreateProgressRequest;
 import org.example.kpiservice.dtos.request.UpdateKPIParameterRequest;
+import org.example.kpiservice.dtos.request.UpdateProgressRequest;
 import org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse;
 import org.example.kpiservice.dtos.response.KPIParameterResponse;
 
@@ -90,4 +91,29 @@ public interface KPIParameterService {
      * @return List of progress records
      */
     List<EmployeeKPIProgressResponse> getUserKPIProgress(Long kpiId, String userEmail, List<Map<String, Object>> teams);
+
+    /**
+     * Get specific progress details
+     *
+     * @param kpiId      KPI ID
+     * @param progressId Progress ID
+     * @param userEmail  Authenticated user's email
+     * @param teams      User's teams from JWT
+     * @return Progress details
+     */
+    EmployeeKPIProgressResponse getKPIProgressById(Long kpiId, Long progressId, String userEmail,
+            List<Map<String, Object>> teams);
+
+    /**
+     * Update employee progress for KPI parameter
+     *
+     * @param kpiId      KPI ID
+     * @param progressId Progress ID
+     * @param request    Progress update request
+     * @param userEmail  Authenticated user's email
+     * @param teams      User's teams from JWT
+     * @return Updated progress response
+     */
+    EmployeeKPIProgressResponse updateKPIProgress(Long kpiId, Long progressId, UpdateProgressRequest request,
+            String userEmail, List<Map<String, Object>> teams);
 }
