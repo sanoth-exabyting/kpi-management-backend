@@ -11,7 +11,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.kpiservice.dtos.ApiResponseEntity;
 import org.example.kpiservice.dtos.request.CreateKPIParameterRequest;
+import org.example.kpiservice.dtos.request.CreateProgressRequest;
 import org.example.kpiservice.dtos.request.UpdateKPIParameterRequest;
+import org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse;
 import org.example.kpiservice.dtos.response.KPIParameterResponse;
 import org.example.kpiservice.service.KPIParameterService;
 import org.example.kpiservice.util.JwtHelper;
@@ -153,5 +155,34 @@ public class KPIParameterController {
         kpiParameterService.deleteKPIParameter(kpiId, parameterId, userEmail, teams);
 
         return ApiResponseEntity.ok(null);
+    }
+
+    @Operation(summary = "Create Employee Progress", description = "Create employee progress for a KPI parameter. User must be a member of the KPI's team. Each employee can only create progress once per parameter.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "201", description = "Progress created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = EmployeeKPIProgressResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Conflict - Progress already exists for this employee and parameter", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid input or parameter doesn't belong to KPI", content = @Content),
+            @ApiResponse(responseCode = "404", description = "KPI or parameter not found", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Not a team member", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid token", content = @Content)
+    })
+    @PostMapping(value = "/{parameterId}/progress", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponseEntity<EmployeeKPIProgressResponse, Void>> createProgress(
+            @PathVariable Long kpiId,
+            @PathVariable Long parameterId,
+            @Valid @RequestBody CreateProgressRequest request,
+            HttpServletRequest httpRequest) {
+
+        // Get authenticated user's email
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
+        // Extract teams from JWT
+        List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
+
+        // Create progress
+        EmployeeKPIProgressResponse response = kpiParameterService.createProgress(kpiId, parameterId, request,
+                userEmail, teams);
+
+        return ApiResponseEntity.created(response);
     }
 }
