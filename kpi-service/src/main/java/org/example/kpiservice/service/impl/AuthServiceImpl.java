@@ -21,6 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -59,15 +62,21 @@ public class AuthServiceImpl implements AuthService {
             throw ApiException.create(HttpStatus.FORBIDDEN, "Your account has been terminated. Please contact HR.");
         }
 
-        // Get user type from TeamMember table in secondary DB
-        String userType = teamMemberRepository.findByEmployeeId(employee.getEmployeeId())
-                .map(teamMember -> teamMember.getRole().name())
-                .orElse(null);
+        // Get all team memberships from TeamMember table in secondary DB
+        List<Map<String, Object>> teams = teamMemberRepository.findAllByEmployeeId(employee.getEmployeeId())
+                .stream()
+                .map(teamMember -> {
+                    Map<String, Object> team = new HashMap<>();
+                    team.put("team_id", teamMember.getTeamId());
+                    team.put("role", teamMember.getRole().name());
+                    return team;
+                })
+                .toList();
 
-        // Generate JWT token with userType
-        String token = jwtUtil.generateToken(employee.getEmail(), userType);
+        // Generate JWT token with teams
+        String token = jwtUtil.generateToken(employee.getEmail(), teams);
 
-        log.info("User logged in successfully: {} with userType: {}", email, userType);
+        log.info("User logged in successfully: {} with {} team(s)", email, teams.size());
 
         return LoginResponse.builder()
                 .accessToken(token)

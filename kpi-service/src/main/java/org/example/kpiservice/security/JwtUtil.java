@@ -12,6 +12,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -31,6 +32,16 @@ public class JwtUtil {
 
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> extractTeams(String token) {
+        Claims claims = extractAllClaims(token);
+        Object teamsObj = claims.get("teams");
+        if (teamsObj instanceof List) {
+            return (List<Map<String, Object>>) teamsObj;
+        }
+        return List.of();
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -55,10 +66,10 @@ public class JwtUtil {
         return createToken(claims, username);
     }
 
-    public String generateToken(String username, String userType) {
+    public String generateToken(String username, List<Map<String, Object>> teams) {
         Map<String, Object> claims = new HashMap<>();
-        if (userType != null) {
-            claims.put("userType", userType);
+        if (teams != null && !teams.isEmpty()) {
+            claims.put("teams", teams);
         }
         return createToken(claims, username);
     }
