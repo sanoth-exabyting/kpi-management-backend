@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.kpiservice.dtos.ApiResponseEntity;
 import org.example.kpiservice.dtos.request.CreateKPIRequest;
+import org.example.kpiservice.dtos.request.UpdateKPIRequest;
 import org.example.kpiservice.dtos.response.KPIResponse;
 import org.example.kpiservice.service.KPIService;
 import org.example.kpiservice.util.JwtHelper;
@@ -69,5 +70,51 @@ public class KPIController {
                 List<KPIResponse> kpis = kpiService.getUserKPIs(teams);
 
                 return ApiResponseEntity.ok(kpis);
+        }
+
+        @Operation(summary = "Get KPI by ID", description = "Get a specific KPI by ID. User must belong to the KPI's team.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+                        @ApiResponse(responseCode = "200", description = "Successfully retrieved KPI", content = @Content(mediaType = "application/json", schema = @Schema(implementation = KPIResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "KPI not found", content = @Content),
+                        @ApiResponse(responseCode = "403", description = "Forbidden - Not a member of KPI's team", content = @Content),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid token", content = @Content)
+        })
+        @GetMapping(value = "/{kpiId}", produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<ApiResponseEntity<KPIResponse, Void>> getKPIById(
+                        @PathVariable Long kpiId,
+                        HttpServletRequest httpRequest) {
+
+                // Extract teams from JWT
+                List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
+
+                // Get KPI with team authorization check
+                KPIResponse kpi = kpiService.getKPIById(kpiId, teams);
+
+                return ApiResponseEntity.ok(kpi);
+        }
+
+        @Operation(summary = "Update KPI", description = "Update KPI details. Only team LEADs can update KPIs.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+                        @ApiResponse(responseCode = "200", description = "KPI updated successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = KPIResponse.class))),
+                        @ApiResponse(responseCode = "400", description = "Bad Request - Invalid input", content = @Content),
+                        @ApiResponse(responseCode = "404", description = "KPI not found", content = @Content),
+                        @ApiResponse(responseCode = "403", description = "Forbidden - Not a team LEAD", content = @Content),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid token", content = @Content)
+        })
+        @PatchMapping(value = "/{kpiId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<ApiResponseEntity<KPIResponse, Void>> updateKPI(
+                        @PathVariable Long kpiId,
+                        @RequestBody UpdateKPIRequest request,
+                        HttpServletRequest httpRequest) {
+
+                // Get authenticated user's email
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                String userEmail = authentication.getName();
+
+                // Extract teams from JWT
+                List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
+
+                // Update KPI
+                KPIResponse response = kpiService.updateKPI(kpiId, request, userEmail, teams);
+
+                return ApiResponseEntity.ok(response);
         }
 }
