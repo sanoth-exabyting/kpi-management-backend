@@ -18,6 +18,7 @@ import org.example.kpiservice.repository.EmployeeRepository;
 import org.example.kpiservice.repository.KPIParameterRepository;
 import org.example.kpiservice.repository.KPIRepository;
 import org.example.kpiservice.service.KPIParameterService;
+import org.example.kpiservice.util.TeamAccessValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
         private final EmployeeKPIParameterRepository employeeKPIParameterRepository;
         private final KPIRepository kpiRepository;
         private final EmployeeRepository employeeRepository;
+        private final TeamAccessValidator teamAccessValidator;
 
         @Override
         @Transactional
@@ -48,19 +50,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
                 // Check if user is LEAD of the KPI's team
-                boolean isLead = teams.stream()
-                                .anyMatch(team -> {
-                                        Object teamId = team.get("team_id");
-                                        Object role = team.get("role");
-                                        Long teamIdLong = teamId instanceof Integer ? ((Integer) teamId).longValue()
-                                                        : (Long) teamId;
-                                        return teamIdLong.equals(kpi.getTeamId()) && "LEAD".equals(role);
-                                });
-
-                if (!isLead) {
-                        throw ApiException.create(HttpStatus.FORBIDDEN,
-                                        "You must be a LEAD of team " + kpi.getTeamId() + " to create KPI parameters");
-                }
+                teamAccessValidator.checkLeadRole(kpi.getTeamId(), teams);
 
                 // Create KPI parameter
                 KPIParameter parameter = KPIParameter.builder()
@@ -88,25 +78,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Extract team IDs from user's teams
-                List<Long> userTeamIds = teams.stream()
-                                .map(team -> {
-                                        Object teamId = team.get("team_id");
-                                        if (teamId instanceof Integer) {
-                                                return ((Integer) teamId).longValue();
-                                        } else if (teamId instanceof Long) {
-                                                return (Long) teamId;
-                                        }
-                                        return null;
-                                })
-                                .filter(id -> id != null)
-                                .toList();
-
                 // Check if KPI's team_id is in user's teams
-                if (!userTeamIds.contains(kpi.getTeamId())) {
-                        throw ApiException.create(HttpStatus.FORBIDDEN,
-                                        "You do not have access to this KPI's parameters");
-                }
+                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
 
                 // Get all parameters for the KPI
                 List<KPIParameter> parameters = kpiParameterRepository.findAllByKpiId(kpiId);
@@ -124,25 +97,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Extract team IDs from user's teams
-                List<Long> userTeamIds = teams.stream()
-                                .map(team -> {
-                                        Object teamId = team.get("team_id");
-                                        if (teamId instanceof Integer) {
-                                                return ((Integer) teamId).longValue();
-                                        } else if (teamId instanceof Long) {
-                                                return (Long) teamId;
-                                        }
-                                        return null;
-                                })
-                                .filter(id -> id != null)
-                                .toList();
-
                 // Check if KPI's team_id is in user's teams
-                if (!userTeamIds.contains(kpi.getTeamId())) {
-                        throw ApiException.create(HttpStatus.FORBIDDEN,
-                                        "You do not have access to this KPI's parameters");
-                }
+                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -172,19 +128,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
                 // Check if user is LEAD of the KPI's team
-                boolean isLead = teams.stream()
-                                .anyMatch(team -> {
-                                        Object teamId = team.get("team_id");
-                                        Object role = team.get("role");
-                                        Long teamIdLong = teamId instanceof Integer ? ((Integer) teamId).longValue()
-                                                        : (Long) teamId;
-                                        return teamIdLong.equals(kpi.getTeamId()) && "LEAD".equals(role);
-                                });
-
-                if (!isLead) {
-                        throw ApiException.create(HttpStatus.FORBIDDEN,
-                                        "You must be a LEAD of team " + kpi.getTeamId() + " to update KPI parameters");
-                }
+                teamAccessValidator.checkLeadRole(kpi.getTeamId(), teams);
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -230,19 +174,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
                 // Check if user is LEAD of the KPI's team
-                boolean isLead = teams.stream()
-                                .anyMatch(team -> {
-                                        Object teamId = team.get("team_id");
-                                        Object role = team.get("role");
-                                        Long teamIdLong = teamId instanceof Integer ? ((Integer) teamId).longValue()
-                                                        : (Long) teamId;
-                                        return teamIdLong.equals(kpi.getTeamId()) && "LEAD".equals(role);
-                                });
-
-                if (!isLead) {
-                        throw ApiException.create(HttpStatus.FORBIDDEN,
-                                        "You must be a LEAD of team " + kpi.getTeamId() + " to delete KPI parameters");
-                }
+                teamAccessValidator.checkLeadRole(kpi.getTeamId(), teams);
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -273,25 +205,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Extract team IDs from user's teams
-                List<Long> userTeamIds = teams.stream()
-                                .map(team -> {
-                                        Object teamId = team.get("team_id");
-                                        if (teamId instanceof Integer) {
-                                                return ((Integer) teamId).longValue();
-                                        } else if (teamId instanceof Long) {
-                                                return (Long) teamId;
-                                        }
-                                        return null;
-                                })
-                                .filter(id -> id != null)
-                                .toList();
-
                 // Check if KPI's team_id is in user's teams
-                if (!userTeamIds.contains(kpi.getTeamId())) {
-                        throw ApiException.create(HttpStatus.FORBIDDEN,
-                                        "You do not have access to this KPI");
-                }
+                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -345,25 +260,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Extract team IDs from user's teams
-                List<Long> userTeamIds = teams.stream()
-                                .map(team -> {
-                                        Object teamId = team.get("team_id");
-                                        if (teamId instanceof Integer) {
-                                                return ((Integer) teamId).longValue();
-                                        } else if (teamId instanceof Long) {
-                                                return (Long) teamId;
-                                        }
-                                        return null;
-                                })
-                                .filter(id -> id != null)
-                                .toList();
-
                 // Check if KPI's team_id is in user's teams
-                if (!userTeamIds.contains(kpi.getTeamId())) {
-                        throw ApiException.create(HttpStatus.FORBIDDEN,
-                                        "You do not have access to this KPI");
-                }
+                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
 
                 // Get all progress for this KPI created by the current user
                 List<EmployeeKPIParameter> progressList = employeeKPIParameterRepository
@@ -389,25 +287,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Extract team IDs from user's teams
-                List<Long> userTeamIds = teams.stream()
-                                .map(team -> {
-                                        Object teamId = team.get("team_id");
-                                        if (teamId instanceof Integer) {
-                                                return ((Integer) teamId).longValue();
-                                        } else if (teamId instanceof Long) {
-                                                return (Long) teamId;
-                                        }
-                                        return null;
-                                })
-                                .filter(id -> id != null)
-                                .toList();
-
                 // Check if KPI's team_id is in user's teams
-                if (!userTeamIds.contains(kpi.getTeamId())) {
-                        throw ApiException.create(HttpStatus.FORBIDDEN,
-                                        "You do not have access to this KPI");
-                }
+                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
 
                 // Find progress by ID
                 EmployeeKPIParameter progress = employeeKPIParameterRepository.findById(progressId)
@@ -443,25 +324,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Extract team IDs from user's teams
-                List<Long> userTeamIds = teams.stream()
-                                .map(team -> {
-                                        Object teamId = team.get("team_id");
-                                        if (teamId instanceof Integer) {
-                                                return ((Integer) teamId).longValue();
-                                        } else if (teamId instanceof Long) {
-                                                return (Long) teamId;
-                                        }
-                                        return null;
-                                })
-                                .filter(id -> id != null)
-                                .toList();
-
                 // Check if KPI's team_id is in user's teams
-                if (!userTeamIds.contains(kpi.getTeamId())) {
-                        throw ApiException.create(HttpStatus.FORBIDDEN,
-                                        "You do not have access to this KPI");
-                }
+                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
 
                 // Find progress by ID
                 EmployeeKPIParameter progress = employeeKPIParameterRepository.findById(progressId)
@@ -530,4 +394,5 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                                 .updatedAt(progress.getUpdatedAt())
                                 .build();
         }
+
 }
