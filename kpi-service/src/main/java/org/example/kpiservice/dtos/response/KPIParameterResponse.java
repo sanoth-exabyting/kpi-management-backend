@@ -27,6 +27,15 @@ public class KPIParameterResponse {
     @Schema(description = "Parameter description", example = "Target revenue in USD")
     private String description;
 
+    @Schema(description = "Employee ID", example = "EMP-001")
+    private String employeeId;
+
+    @Schema(description = "Target value", example = "100")
+    private Integer targetValue;
+
+    @Schema(description = "Is required", example = "true")
+    private Boolean isRequired;
+
     @Schema(description = "Created by employee ID", example = "123")
     private Long createdBy;
 

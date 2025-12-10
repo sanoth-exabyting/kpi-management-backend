@@ -1,6 +1,8 @@
 package org.example.kpiservice.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,10 +23,23 @@ public class KPIParameter extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "kpi_id", nullable = false)
     private KPI kpi;
-    
+
     @Column(name = "name", nullable = false, length = 255)
     private String name;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "employee_id", nullable = false, length = 50)
+    private String employeeId;
+
+    @Column(name = "target_value", nullable = false)
+    @Min(0)
+    @Max(100)
+    @lombok.Builder.Default
+    private Integer targetValue = 0;
+
+    @Column(name = "is_required", nullable = false)
+    @lombok.Builder.Default
+    private Boolean isRequired = true;
 }

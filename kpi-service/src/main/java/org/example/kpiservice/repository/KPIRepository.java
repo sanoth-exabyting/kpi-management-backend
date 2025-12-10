@@ -10,5 +10,5 @@ import java.util.List;
 @Repository
 public interface KPIRepository extends JpaRepository<KPI, Long> {
 
-    List<KPI> findAllByTeamIdInAndStatus(List<Long> teamIds, KPIStatus status);
+    List<KPI> findAllByEmployeeIdAndStatus(String employeeId, KPIStatus status);
 }

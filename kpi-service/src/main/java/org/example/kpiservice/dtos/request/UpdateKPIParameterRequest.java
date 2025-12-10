@@ -18,4 +18,12 @@ public class UpdateKPIParameterRequest {
 
     @Schema(description = "Parameter description", example = "Updated target revenue in USD")
     private String description;
+
+    @Schema(description = "Target value", example = "100")
+    @jakarta.validation.constraints.Min(0)
+    @jakarta.validation.constraints.Max(100)
+    private Integer targetValue;
+
+    @Schema(description = "Is required", example = "true")
+    private Boolean isRequired;
 }

@@ -41,4 +41,8 @@ public class EmployeeKPIParameter extends BaseEntity {
 
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
+
+    @Column(name = "is_completed", nullable = false)
+    @lombok.Builder.Default
+    private Boolean isCompleted = true;
 }

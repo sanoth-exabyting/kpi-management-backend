@@ -10,4 +10,6 @@ import java.util.List;
 public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
 
     List<TeamMember> findAllByEmployeeId(String employeeId);
+
+    List<TeamMember> findAllByTeamIdIn(List<Long> teamIds);
 }

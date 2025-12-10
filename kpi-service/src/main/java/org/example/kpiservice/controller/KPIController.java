@@ -66,8 +66,12 @@ public class KPIController {
                 // Extract teams from JWT
                 List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
+                // Get authenticated user's email
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                String userEmail = authentication.getName();
+
                 // Get user's ACTIVE KPIs
-                List<KPIResponse> kpis = kpiService.getUserKPIs(teams);
+                List<KPIResponse> kpis = kpiService.getUserKPIs(userEmail, teams);
 
                 return ApiResponseEntity.ok(kpis);
         }
@@ -86,8 +90,12 @@ public class KPIController {
                 // Extract teams from JWT
                 List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
+                // Get authenticated user's email
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                String userEmail = authentication.getName();
+
                 // Get KPI with team authorization check
-                KPIResponse kpi = kpiService.getKPIById(kpiId, teams);
+                KPIResponse kpi = kpiService.getKPIById(kpiId, userEmail, teams);
 
                 return ApiResponseEntity.ok(kpi);
         }

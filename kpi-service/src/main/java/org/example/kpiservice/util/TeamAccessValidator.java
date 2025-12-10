@@ -4,45 +4,51 @@ import org.example.kpiservice.exception.ApiException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import org.example.kpiservice.entity.Employee;
+import org.example.kpiservice.repository.EmployeeRepository;
+import org.example.kpiservice.secondary.entity.TeamMember;
+import org.example.kpiservice.secondary.repository.TeamMemberRepository;
+
 import java.util.List;
 import java.util.Map;
 
 @Component
 public class TeamAccessValidator {
 
-    public void checkTeamMembership(Long kpiTeamId, List<Map<String, Object>> teams) {
-        List<Long> userTeamIds = teams.stream()
-                .map(team -> {
-                    Object teamId = team.get("team_id");
-                    if (teamId instanceof Integer) {
-                        return ((Integer) teamId).longValue();
-                    } else if (teamId instanceof Long) {
-                        return (Long) teamId;
-                    }
-                    return null;
-                })
-                .filter(id -> id != null)
-                .toList();
+    private final EmployeeRepository employeeRepository;
+    private final TeamMemberRepository teamMemberRepository;
 
-        if (!userTeamIds.contains(kpiTeamId)) {
-            throw ApiException.create(HttpStatus.FORBIDDEN,
-                    "You do not have access to this KPI");
-        }
+    public TeamAccessValidator(EmployeeRepository employeeRepository, TeamMemberRepository teamMemberRepository) {
+        this.employeeRepository = employeeRepository;
+        this.teamMemberRepository = teamMemberRepository;
     }
 
-    public void checkLeadRole(Long kpiTeamId, List<Map<String, Object>> teams) {
-        boolean isLead = teams.stream()
-                .anyMatch(team -> {
-                    Object teamId = team.get("team_id");
-                    Object role = team.get("role");
-                    Long teamIdLong = teamId instanceof Integer ? ((Integer) teamId).longValue()
-                            : (Long) teamId;
-                    return teamIdLong.equals(kpiTeamId) && "LEAD".equals(role);
+    public void validateAccess(String kpiOwnerId, String currentUserEmail, List<Map<String, Object>> teams) {
+        Employee currentUser = employeeRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
+
+        // Allow if user is the owner
+        if (currentUser.getEmployeeId().equals(kpiOwnerId)) {
+            return;
+        }
+
+        // Check if user is LEAD of any team the KPI owner is in
+        List<TeamMember> targetEmployeeTeams = teamMemberRepository.findAllByEmployeeId(kpiOwnerId);
+
+        boolean isLeadOfTarget = teams.stream()
+                .anyMatch(userTeam -> {
+                    Object userTeamIdObj = userTeam.get("team_id");
+                    Object role = userTeam.get("role");
+                    Long userTeamId = userTeamIdObj instanceof Integer ? ((Integer) userTeamIdObj).longValue()
+                            : (Long) userTeamIdObj;
+
+                    return "LEAD".equals(role) && targetEmployeeTeams.stream()
+                            .anyMatch(targetTeam -> targetTeam.getTeamId().equals(userTeamId));
                 });
 
-        if (!isLead) {
+        if (!isLeadOfTarget) {
             throw ApiException.create(HttpStatus.FORBIDDEN,
-                    "You must be a LEAD of team " + kpiTeamId + " to perform this action");
+                    "You do not have access to this KPI");
         }
     }
 }

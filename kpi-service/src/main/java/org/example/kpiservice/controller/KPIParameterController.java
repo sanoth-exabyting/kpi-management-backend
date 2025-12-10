@@ -75,8 +75,12 @@ public class KPIParameterController {
         // Extract teams from JWT
         List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
+        // Get authenticated user's email
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
         // Get KPI parameters
-        List<KPIParameterResponse> parameters = kpiParameterService.getKPIParameters(kpiId, teams);
+        List<KPIParameterResponse> parameters = kpiParameterService.getKPIParameters(kpiId, userEmail, teams);
 
         return ApiResponseEntity.ok(parameters);
     }
@@ -97,8 +101,12 @@ public class KPIParameterController {
         // Extract teams from JWT
         List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
+        // Get authenticated user's email
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
         // Get KPI parameter
-        KPIParameterResponse parameter = kpiParameterService.getKPIParameterById(kpiId, parameterId, teams);
+        KPIParameterResponse parameter = kpiParameterService.getKPIParameterById(kpiId, parameterId, userEmail, teams);
 
         return ApiResponseEntity.ok(parameter);
     }

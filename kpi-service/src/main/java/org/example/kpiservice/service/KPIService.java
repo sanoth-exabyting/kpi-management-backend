@@ -28,7 +28,7 @@ public interface KPIService {
      * @param teams User's teams from JWT
      * @return List of ACTIVE KPIs for user's teams
      */
-    List<KPIResponse> getUserKPIs(List<Map<String, Object>> teams);
+    List<KPIResponse> getUserKPIs(String userEmail, List<Map<String, Object>> teams);
 
     /**
      * Get KPI by ID with team authorization check
@@ -37,7 +37,7 @@ public interface KPIService {
      * @param teams User's teams from JWT
      * @return KPI response
      */
-    KPIResponse getKPIById(Long kpiId, List<Map<String, Object>> teams);
+    KPIResponse getKPIById(Long kpiId, String userEmail, List<Map<String, Object>> teams);
 
     /**
      * Update KPI (LEAD only)

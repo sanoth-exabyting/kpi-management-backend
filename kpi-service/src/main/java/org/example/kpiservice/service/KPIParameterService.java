@@ -34,7 +34,7 @@ public interface KPIParameterService {
      * @param teams User's teams from JWT
      * @return List of parameters
      */
-    List<KPIParameterResponse> getKPIParameters(Long kpiId, List<Map<String, Object>> teams);
+    List<KPIParameterResponse> getKPIParameters(Long kpiId, String userEmail, List<Map<String, Object>> teams);
 
     /**
      * Get KPI parameter by ID (team member access)
@@ -44,7 +44,8 @@ public interface KPIParameterService {
      * @param teams       User's teams from JWT
      * @return Parameter response
      */
-    KPIParameterResponse getKPIParameterById(Long kpiId, Long parameterId, List<Map<String, Object>> teams);
+    KPIParameterResponse getKPIParameterById(Long kpiId, Long parameterId, String userEmail,
+            List<Map<String, Object>> teams);
 
     /**
      * Update KPI parameter (LEAD only)

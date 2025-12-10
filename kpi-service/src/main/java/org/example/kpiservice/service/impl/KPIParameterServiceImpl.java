@@ -49,14 +49,17 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if user is LEAD of the KPI's team
-                teamAccessValidator.checkLeadRole(kpi.getTeamId(), teams);
+                // Validate access (LEAD or Owner)
+                teamAccessValidator.validateAccess(kpi.getEmployeeId(), userEmail, teams);
 
                 // Create KPI parameter
                 KPIParameter parameter = KPIParameter.builder()
                                 .kpi(kpi)
                                 .name(request.getName())
                                 .description(request.getDescription())
+                                .employeeId(kpi.getEmployeeId())
+                                .targetValue(request.getTargetValue())
+                                .isRequired(request.getIsRequired())
                                 .build();
 
                 // Set audit fields
@@ -73,13 +76,14 @@ public class KPIParameterServiceImpl implements KPIParameterService {
         }
 
         @Override
-        public List<KPIParameterResponse> getKPIParameters(Long kpiId, List<Map<String, Object>> teams) {
+        public List<KPIParameterResponse> getKPIParameters(Long kpiId, String userEmail,
+                        List<Map<String, Object>> teams) {
                 // Find KPI by ID
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
                 // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                teamAccessValidator.validateAccess(kpi.getEmployeeId(), userEmail, teams);
 
                 // Get all parameters for the KPI
                 List<KPIParameter> parameters = kpiParameterRepository.findAllByKpiId(kpiId);
@@ -92,13 +96,14 @@ public class KPIParameterServiceImpl implements KPIParameterService {
         }
 
         @Override
-        public KPIParameterResponse getKPIParameterById(Long kpiId, Long parameterId, List<Map<String, Object>> teams) {
+        public KPIParameterResponse getKPIParameterById(Long kpiId, Long parameterId, String userEmail,
+                        List<Map<String, Object>> teams) {
                 // Find KPI by ID
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
                 // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                teamAccessValidator.validateAccess(kpi.getEmployeeId(), userEmail, teams);
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -127,8 +132,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if user is LEAD of the KPI's team
-                teamAccessValidator.checkLeadRole(kpi.getTeamId(), teams);
+                // Validate access (LEAD or Owner)
+                teamAccessValidator.validateAccess(kpi.getEmployeeId(), userEmail, teams);
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -146,6 +151,12 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 }
                 if (request.getDescription() != null) {
                         parameter.setDescription(request.getDescription());
+                }
+                if (request.getTargetValue() != null) {
+                        parameter.setTargetValue(request.getTargetValue());
+                }
+                if (request.getIsRequired() != null) {
+                        parameter.setIsRequired(request.getIsRequired());
                 }
 
                 // Update audit fields (created_by and created_at remain unchanged)
@@ -173,8 +184,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if user is LEAD of the KPI's team
-                teamAccessValidator.checkLeadRole(kpi.getTeamId(), teams);
+                // Validate access (LEAD or Owner)
+                teamAccessValidator.validateAccess(kpi.getEmployeeId(), userEmail, teams);
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -205,8 +216,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                // Validate access (Team member)
+                teamAccessValidator.validateAccess(kpi.getEmployeeId(), userEmail, teams);
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -260,8 +271,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                // Validate access (Team member)
+                teamAccessValidator.validateAccess(kpi.getEmployeeId(), userEmail, teams);
 
                 // Get all progress for this KPI created by the current user
                 List<EmployeeKPIParameter> progressList = employeeKPIParameterRepository
@@ -287,8 +298,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                // Validate access (Team member)
+                teamAccessValidator.validateAccess(kpi.getEmployeeId(), userEmail, teams);
 
                 // Find progress by ID
                 EmployeeKPIParameter progress = employeeKPIParameterRepository.findById(progressId)
@@ -324,8 +335,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                // Validate access (Team member)
+                teamAccessValidator.validateAccess(kpi.getEmployeeId(), userEmail, teams);
 
                 // Find progress by ID
                 EmployeeKPIParameter progress = employeeKPIParameterRepository.findById(progressId)
@@ -373,6 +384,9 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                                 .kpiId(parameter.getKpi().getId())
                                 .name(parameter.getName())
                                 .description(parameter.getDescription())
+                                .employeeId(parameter.getEmployeeId())
+                                .targetValue(parameter.getTargetValue())
+                                .isRequired(parameter.getIsRequired())
                                 .createdBy(parameter.getCreatedBy())
                                 .createdAt(parameter.getCreatedAt())
                                 .updatedBy(parameter.getUpdatedBy())

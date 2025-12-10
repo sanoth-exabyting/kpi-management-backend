@@ -18,8 +18,8 @@ public class KPIResponse {
     @Schema(description = "KPI ID", example = "1")
     private Long id;
 
-    @Schema(description = "Team ID", example = "1")
-    private Long teamId;
+    @Schema(description = "Employee ID", example = "EMP001")
+    private String employeeId;
 
     @Schema(description = "KPI name", example = "Sales Target Q1")
     private String name;

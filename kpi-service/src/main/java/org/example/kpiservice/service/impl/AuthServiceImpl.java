@@ -118,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
         // Hash the password
         String hashedPassword = passwordEncoder.encode(request.getPassword());
 
-        // Create new employee in primary DB with data from secondary DB
+        // Create a new employee in primary DB with data from secondary DB
         org.example.kpiservice.entity.Employee newEmployee = org.example.kpiservice.entity.Employee.builder()
                 .email(secondaryEmployee.getEmail())
                 .password(hashedPassword)

@@ -8,16 +8,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.example.kpiservice.enums.KPIStatus;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
 @Entity
 @Table(name = "kpis", indexes = {
-        @Index(name = "idx_kpi_team_id", columnList = "team_id"),
+        @Index(name = "idx_kpi_employee_id", columnList = "employee_id"),
         @Index(name = "idx_kpi_status", columnList = "status"),
         @Index(name = "idx_kpi_deleted", columnList = "is_deleted")
 })
@@ -30,9 +28,8 @@ import java.time.Instant;
 @SuperBuilder(toBuilder = true)
 public class KPI extends BaseEntity {
 
-    @Column(name = "team_id", nullable = false)
-    @JdbcTypeCode(SqlTypes.BIGINT)
-    private Long teamId;
+    @Column(name = "employee_id", nullable = false, length = 50)
+    private String employeeId;
 
     @Column(name = "name", nullable = false, length = 255)
     private String name;

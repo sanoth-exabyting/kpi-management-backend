@@ -11,6 +11,8 @@ import org.example.kpiservice.enums.KPIStatus;
 import org.example.kpiservice.exception.ApiException;
 import org.example.kpiservice.repository.EmployeeRepository;
 import org.example.kpiservice.repository.KPIRepository;
+import org.example.kpiservice.secondary.entity.TeamMember;
+import org.example.kpiservice.secondary.repository.TeamMemberRepository;
 import org.example.kpiservice.service.KPIService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class KPIServiceImpl implements KPIService {
 
     private final KPIRepository kpiRepository;
     private final EmployeeRepository employeeRepository;
+    private final TeamMemberRepository teamMemberRepository;
 
     @Override
     @Transactional
@@ -34,18 +37,27 @@ public class KPIServiceImpl implements KPIService {
         Employee employee = employeeRepository.findByEmail(userEmail)
                 .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
 
-        // Validate user is LEAD of the specified team
-        boolean isLead = teams.stream()
-                .anyMatch(team -> {
-                    Object teamId = team.get("team_id");
-                    Object role = team.get("role");
-                    Long teamIdLong = teamId instanceof Integer ? ((Integer) teamId).longValue() : (Long) teamId;
-                    return teamIdLong.equals(request.getTeamId()) && "LEAD".equals(role);
-                });
+        // Authorization: Allow if creating for self OR if user is LEAD of a team the
+        // target employee is in
+        if (!employee.getEmployeeId().equals(request.getEmployeeId())) {
+            // Check if user is LEAD of any team the target employee is in
+            List<TeamMember> targetEmployeeTeams = teamMemberRepository.findAllByEmployeeId(request.getEmployeeId());
 
-        if (!isLead) {
-            throw ApiException.create(HttpStatus.FORBIDDEN,
-                    "You must be a LEAD of team " + request.getTeamId() + " to create KPIs");
+            boolean isLeadOfTarget = teams.stream()
+                    .anyMatch(userTeam -> {
+                        Object userTeamIdObj = userTeam.get("team_id");
+                        Object role = userTeam.get("role");
+                        Long userTeamId = userTeamIdObj instanceof Integer ? ((Integer) userTeamIdObj).longValue()
+                                : (Long) userTeamIdObj;
+
+                        return "LEAD".equals(role) && targetEmployeeTeams.stream()
+                                .anyMatch(targetTeam -> targetTeam.getTeamId().equals(userTeamId));
+                    });
+
+            if (!isLeadOfTarget) {
+                throw ApiException.create(HttpStatus.FORBIDDEN,
+                        "Only Lead of the target employee's team can create a KPI for them");
+            }
         }
 
         // Validate status is DRAFT or ACTIVE
@@ -64,7 +76,7 @@ public class KPIServiceImpl implements KPIService {
 
         // Create KPI entity
         KPI kpi = KPI.builder()
-                .teamId(request.getTeamId())
+                .employeeId(request.getEmployeeId())
                 .name(request.getName())
                 .description(request.getDescription())
                 .startAt(startAtUtc)
@@ -88,30 +100,15 @@ public class KPIServiceImpl implements KPIService {
     }
 
     @Override
-    public List<KPIResponse> getUserKPIs(List<Map<String, Object>> teams) {
-        // Extract team IDs from teams array
-        List<Long> teamIds = teams.stream()
-                .map(team -> {
-                    Object teamId = team.get("team_id");
-                    if (teamId instanceof Integer) {
-                        return ((Integer) teamId).longValue();
-                    } else if (teamId instanceof Long) {
-                        return (Long) teamId;
-                    }
-                    return null;
-                })
-                .filter(id -> id != null)
-                .toList();
+    public List<KPIResponse> getUserKPIs(String userEmail, List<Map<String, Object>> teams) {
+        // Get employee by email
+        Employee employee = employeeRepository.findByEmail(userEmail)
+                .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
 
-        // If no teams, return empty list
-        if (teamIds.isEmpty()) {
-            return List.of();
-        }
+        // Get ACTIVE KPIs for the user (where employeeId matches)
+        List<KPI> kpis = kpiRepository.findAllByEmployeeIdAndStatus(employee.getEmployeeId(), KPIStatus.ACTIVE);
 
-        // Get ACTIVE KPIs for user's teams
-        List<KPI> kpis = kpiRepository.findAllByTeamIdInAndStatus(teamIds, KPIStatus.ACTIVE);
-
-        log.info("Retrieved {} ACTIVE KPIs for user's {} team(s)", kpis.size(), teamIds.size());
+        log.info("Retrieved {} ACTIVE KPIs for user: {}", kpis.size(), employee.getEmployeeId());
 
         // Map to response
         return kpis.stream()
@@ -120,32 +117,42 @@ public class KPIServiceImpl implements KPIService {
     }
 
     @Override
-    public KPIResponse getKPIById(Long kpiId, List<Map<String, Object>> teams) {
+    public KPIResponse getKPIById(Long kpiId, String userEmail, List<Map<String, Object>> teams) {
+        // Get employee by email
+        Employee employee = employeeRepository.findByEmail(userEmail)
+                .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
+
         // Find KPI by ID
         KPI kpi = kpiRepository.findById(kpiId)
                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-        // Extract team IDs from user's teams
-        List<Long> userTeamIds = teams.stream()
-                .map(team -> {
-                    Object teamId = team.get("team_id");
-                    if (teamId instanceof Integer) {
-                        return ((Integer) teamId).longValue();
-                    } else if (teamId instanceof Long) {
-                        return (Long) teamId;
-                    }
-                    return null;
-                })
-                .filter(id -> id != null)
-                .toList();
+        // Check if user has access to this KPI
+        // Access allowed if:
+        // 1. User is the owner (employeeId matches)
+        // 2. User is LEAD of a team the KPI's employee belongs to
 
-        // Check if KPI's team_id is in user's teams
-        if (!userTeamIds.contains(kpi.getTeamId())) {
-            throw ApiException.create(HttpStatus.FORBIDDEN,
-                    "You do not have access to this KPI");
+        if (!employee.getEmployeeId().equals(kpi.getEmployeeId())) {
+            // Check if user is LEAD of any team the KPI's employee is in
+            List<TeamMember> targetEmployeeTeams = teamMemberRepository.findAllByEmployeeId(kpi.getEmployeeId());
+
+            boolean isLeadOfTarget = teams.stream()
+                    .anyMatch(userTeam -> {
+                        Object userTeamIdObj = userTeam.get("team_id");
+                        Object role = userTeam.get("role");
+                        Long userTeamId = userTeamIdObj instanceof Integer ? ((Integer) userTeamIdObj).longValue()
+                                : (Long) userTeamIdObj;
+
+                        return "LEAD".equals(role) && targetEmployeeTeams.stream()
+                                .anyMatch(targetTeam -> targetTeam.getTeamId().equals(userTeamId));
+                    });
+
+            if (!isLeadOfTarget) {
+                throw ApiException.create(HttpStatus.FORBIDDEN,
+                        "You do not have access to this KPI");
+            }
         }
 
-        log.info("User accessed KPI: {} from team: {}", kpiId, kpi.getTeamId());
+        log.info("User accessed KPI: {}", kpiId);
 
         return mapToResponse(kpi);
     }
@@ -162,18 +169,27 @@ public class KPIServiceImpl implements KPIService {
         KPI kpi = kpiRepository.findById(kpiId)
                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-        // Check if user is LEAD of the KPI's team
-        boolean isLead = teams.stream()
-                .anyMatch(team -> {
-                    Object teamId = team.get("team_id");
-                    Object role = team.get("role");
-                    Long teamIdLong = teamId instanceof Integer ? ((Integer) teamId).longValue() : (Long) teamId;
-                    return teamIdLong.equals(kpi.getTeamId()) && "LEAD".equals(role);
-                });
+        // Authorization: Allow if updating self OR if user is LEAD of a team the target
+        // employee is in
+        if (!employee.getEmployeeId().equals(kpi.getEmployeeId())) {
+            // Check if user is LEAD of any team the KPI's employee is in
+            List<TeamMember> targetEmployeeTeams = teamMemberRepository.findAllByEmployeeId(kpi.getEmployeeId());
 
-        if (!isLead) {
-            throw ApiException.create(HttpStatus.FORBIDDEN,
-                    "You must be a LEAD of team " + kpi.getTeamId() + " to update this KPI");
+            boolean isLeadOfTarget = teams.stream()
+                    .anyMatch(userTeam -> {
+                        Object userTeamIdObj = userTeam.get("team_id");
+                        Object role = userTeam.get("role");
+                        Long userTeamId = userTeamIdObj instanceof Integer ? ((Integer) userTeamIdObj).longValue()
+                                : (Long) userTeamIdObj;
+
+                        return "LEAD".equals(role) && targetEmployeeTeams.stream()
+                                .anyMatch(targetTeam -> targetTeam.getTeamId().equals(userTeamId));
+                    });
+
+            if (!isLeadOfTarget) {
+                throw ApiException.create(HttpStatus.FORBIDDEN,
+                        "You must be a LEAD of a team the employee belongs to, or update your own KPI");
+            }
         }
 
         // Update only allowed fields (null values are ignored for partial updates)
@@ -233,18 +249,27 @@ public class KPIServiceImpl implements KPIService {
         KPI kpi = kpiRepository.findById(kpiId)
                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-        // Check if user is LEAD of the KPI's team
-        boolean isLead = teams.stream()
-                .anyMatch(team -> {
-                    Object teamId = team.get("team_id");
-                    Object role = team.get("role");
-                    Long teamIdLong = teamId instanceof Integer ? ((Integer) teamId).longValue() : (Long) teamId;
-                    return teamIdLong.equals(kpi.getTeamId()) && "LEAD".equals(role);
-                });
+        // Authorization: Allow if deleting self OR if user is LEAD of a team the target
+        // employee is in
+        if (!employee.getEmployeeId().equals(kpi.getEmployeeId())) {
+            // Check if user is LEAD of any team the KPI's employee is in
+            List<TeamMember> targetEmployeeTeams = teamMemberRepository.findAllByEmployeeId(kpi.getEmployeeId());
 
-        if (!isLead) {
-            throw ApiException.create(HttpStatus.FORBIDDEN,
-                    "You must be a LEAD of team " + kpi.getTeamId() + " to delete this KPI");
+            boolean isLeadOfTarget = teams.stream()
+                    .anyMatch(userTeam -> {
+                        Object userTeamIdObj = userTeam.get("team_id");
+                        Object role = userTeam.get("role");
+                        Long userTeamId = userTeamIdObj instanceof Integer ? ((Integer) userTeamIdObj).longValue()
+                                : (Long) userTeamIdObj;
+
+                        return "LEAD".equals(role) && targetEmployeeTeams.stream()
+                                .anyMatch(targetTeam -> targetTeam.getTeamId().equals(userTeamId));
+                    });
+
+            if (!isLeadOfTarget) {
+                throw ApiException.create(HttpStatus.FORBIDDEN,
+                        "You must be a LEAD of a team the employee belongs to, or delete your own KPI");
+            }
         }
 
         // Soft delete (triggers @SQLDelete which sets is_deleted = true)
@@ -256,7 +281,7 @@ public class KPIServiceImpl implements KPIService {
     private KPIResponse mapToResponse(KPI kpi) {
         return KPIResponse.builder()
                 .id(kpi.getId())
-                .teamId(kpi.getTeamId())
+                .employeeId(kpi.getEmployeeId())
                 .name(kpi.getName())
                 .description(kpi.getDescription())
                 .startAt(kpi.getStartAt())
