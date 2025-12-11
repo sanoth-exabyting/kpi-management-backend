@@ -19,9 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
-import org.example.kpiservice.repository.EmployeeRepository;
 import org.example.kpiservice.security.JwtUtil;
 
 @Tag(name = "Employees", description = "Employee management endpoints")
@@ -33,7 +31,6 @@ public class EmployeeController {
     private final EmployeeService employeeService;
     private final JwtHelper jwtHelper;
     private final JwtUtil jwtUtil;
-    private final EmployeeRepository employeeRepository;
 
     @Operation(summary = "Get Employees by Team Lead", description = "Get list of employees who are members of teams where the current user is a Team Lead", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved employees", content = @Content(mediaType = "application/json", schema = @Schema(implementation = EmployeeResponse.class))),
@@ -41,31 +38,12 @@ public class EmployeeController {
     })
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponseEntity<List<EmployeeResponse>, Void>> getEmployees(HttpServletRequest request) {
-        // Extract teams from JWT
-        List<Map<String, Object>> teams = jwtHelper.extractTeams(request);
-
-        // Filter teams where user is LEAD and extract team IDs
-        List<Long> leadTeamIds = teams.stream()
-                .filter(team -> "LEAD".equals(team.get("role")))
-                .map(team -> {
-                    Object teamId = team.get("team_id");
-                    if (teamId instanceof Integer) {
-                        return ((Integer) teamId).longValue();
-                    } else if (teamId instanceof Long) {
-                        return (Long) teamId;
-                    }
-                    return null;
-                })
-                .filter(id -> id != null)
-                .toList();
+        // Extract lead team IDs from JWT
+        List<Long> leadTeamIds = jwtHelper.extractLeadTeamIds(request);
 
         // Extract current user ID from token
         String token = jwtHelper.extractToken(request);
-        String currentUserEmail = jwtUtil.extractUsername(token);
-        String currentUserId = employeeRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> org.example.kpiservice.exception.ApiException
-                        .create(org.springframework.http.HttpStatus.UNAUTHORIZED, "User not found"))
-                .getEmployeeId();
+        String currentUserId = jwtUtil.extractEmployeeId(token);
 
         // Get employees from service
         List<EmployeeResponse> employees = employeeService.getEmployeesByTeamLead(leadTeamIds, currentUserId);

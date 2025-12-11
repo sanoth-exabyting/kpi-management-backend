@@ -27,9 +27,8 @@ public class EmployeeKPIParameter extends BaseEntity {
     @JoinColumn(name = "kpi_parameter_id", nullable = false)
     private KPIParameter kpiParameter;
 
-    @Column(name = "employee_id", nullable = false)
-    @JdbcTypeCode(SqlTypes.BIGINT)
-    private Long employeeId;
+    @Column(name = "employee_id", nullable = false, length = 50)
+    private String employeeId;
 
     @Min(0)
     @Max(100)

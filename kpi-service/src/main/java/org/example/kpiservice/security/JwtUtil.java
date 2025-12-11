@@ -34,6 +34,10 @@ public class JwtUtil {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    public String extractEmployeeId(String token) {
+        return extractClaim(token, claims -> claims.get("employeeId", String.class));
+    }
+
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> extractTeams(String token) {
         Claims claims = extractAllClaims(token);
@@ -61,13 +65,15 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String username, String employeeId) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("employeeId", employeeId);
         return createToken(claims, username);
     }
 
-    public String generateToken(String username, List<Map<String, Object>> teams) {
+    public String generateToken(String username, String employeeId, List<Map<String, Object>> teams) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("employeeId", employeeId);
         if (teams != null && !teams.isEmpty()) {
             claims.put("teams", teams);
         }

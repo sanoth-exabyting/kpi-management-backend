@@ -18,10 +18,6 @@ import java.time.ZonedDateTime;
 @AllArgsConstructor
 public class CreateKPIRequest {
 
-    @NotBlank(message = "Employee ID is required")
-    @Schema(description = "Employee ID", example = "EMP001")
-    private String employeeId;
-
     @NotBlank(message = "Name is required")
     @Schema(description = "KPI name", example = "Sales Target Q1")
     private String name;

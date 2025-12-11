@@ -10,111 +10,28 @@ import org.example.kpiservice.dtos.response.KPIParameterResponse;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Service for KPI parameter operations
- */
+
 public interface KPIParameterService {
 
-    /**
-     * Create KPI parameter (LEAD only)
-     *
-     * @param kpiId     KPI ID
-     * @param request   Create request
-     * @param userEmail Authenticated user's email
-     * @param teams     User's teams from JWT
-     * @return Created parameter response
-     */
-    KPIParameterResponse createKPIParameter(Long kpiId, CreateKPIParameterRequest request, String userEmail,
-            List<Map<String, Object>> teams);
+    KPIParameterResponse createKPIParameter(Long kpiId, CreateKPIParameterRequest request, String userEmail);
 
-    /**
-     * Get KPI parameters (team member access)
-     *
-     * @param kpiId KPI ID
-     * @param teams User's teams from JWT
-     * @return List of parameters
-     */
-    List<KPIParameterResponse> getKPIParameters(Long kpiId, String userEmail, List<Map<String, Object>> teams);
+    List<KPIParameterResponse> getKPIParameters(Long kpiId, String userEmail);
 
-    /**
-     * Get KPI parameter by ID (team member access)
-     *
-     * @param kpiId       KPI ID
-     * @param parameterId Parameter ID
-     * @param teams       User's teams from JWT
-     * @return Parameter response
-     */
-    KPIParameterResponse getKPIParameterById(Long kpiId, Long parameterId, String userEmail,
-            List<Map<String, Object>> teams);
+    KPIParameterResponse getKPIParameterById(Long kpiId, Long parameterId, String userEmail);
 
-    /**
-     * Update KPI parameter (LEAD only)
-     *
-     * @param kpiId       KPI ID
-     * @param parameterId Parameter ID
-     * @param request     Update request
-     * @param userEmail   Authenticated user's email
-     * @param teams       User's teams from JWT
-     * @return Updated parameter response
-     */
     KPIParameterResponse updateKPIParameter(Long kpiId, Long parameterId, UpdateKPIParameterRequest request,
-            String userEmail, List<Map<String, Object>> teams);
+            String userEmail);
 
-    /**
-     * Delete KPI parameter (LEAD only)
-     *
-     * @param kpiId       KPI ID
-     * @param parameterId Parameter ID
-     * @param userEmail   Authenticated user's email
-     * @param teams       User's teams from JWT
-     */
-    void deleteKPIParameter(Long kpiId, Long parameterId, String userEmail, List<Map<String, Object>> teams);
+    void deleteKPIParameter(Long kpiId, Long parameterId, String userEmail);
 
-    /**
-     * Create employee progress for KPI parameter (team member access)
-     *
-     * @param kpiId       KPI ID
-     * @param parameterId Parameter ID
-     * @param request     Progress creation request
-     * @param userEmail   Authenticated user's email
-     * @param teams       User's teams from JWT
-     * @return Created progress response
-     */
     EmployeeKPIProgressResponse createProgress(Long kpiId, Long parameterId, CreateProgressRequest request,
             String userEmail, List<Map<String, Object>> teams);
 
-    /**
-     * Get user's progress for a specific KPI
-     *
-     * @param kpiId     KPI ID
-     * @param userEmail Authenticated user's email
-     * @param teams     User's teams from JWT
-     * @return List of progress records
-     */
     List<EmployeeKPIProgressResponse> getUserKPIProgress(Long kpiId, String userEmail, List<Map<String, Object>> teams);
 
-    /**
-     * Get specific progress details
-     *
-     * @param kpiId      KPI ID
-     * @param progressId Progress ID
-     * @param userEmail  Authenticated user's email
-     * @param teams      User's teams from JWT
-     * @return Progress details
-     */
     EmployeeKPIProgressResponse getKPIProgressById(Long kpiId, Long progressId, String userEmail,
             List<Map<String, Object>> teams);
 
-    /**
-     * Update employee progress for KPI parameter
-     *
-     * @param kpiId      KPI ID
-     * @param progressId Progress ID
-     * @param request    Progress update request
-     * @param userEmail  Authenticated user's email
-     * @param teams      User's teams from JWT
-     * @return Updated progress response
-     */
     EmployeeKPIProgressResponse updateKPIProgress(Long kpiId, Long progressId, UpdateProgressRequest request,
             String userEmail, List<Map<String, Object>> teams);
 }

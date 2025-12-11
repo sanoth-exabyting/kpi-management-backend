@@ -48,7 +48,6 @@ COMMENT ON COLUMN employees.supervisor_id IS 'Reference to supervisor employee I
 -- =====================================================
 CREATE TABLE kpis (
     id BIGSERIAL PRIMARY KEY,
-    employee_id VARCHAR(50) NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     start_at TIMESTAMPTZ NOT NULL,
@@ -65,7 +64,6 @@ CREATE TABLE kpis (
 );
 
 -- Indexes for kpis table
-CREATE INDEX idx_kpi_employee_id ON kpis(employee_id);
 CREATE INDEX idx_kpi_status ON kpis(status);
 CREATE INDEX idx_kpi_deleted ON kpis(is_deleted);
 CREATE INDEX idx_kpi_start_at ON kpis(start_at);
@@ -73,7 +71,6 @@ CREATE INDEX idx_kpi_end_at ON kpis(end_at);
 
 -- Comments for kpis table
 COMMENT ON TABLE kpis IS 'Main KPI tracking table';
-COMMENT ON COLUMN kpis.employee_id IS 'Reference to employee ID';
 COMMENT ON COLUMN kpis.status IS 'KPI lifecycle status: DRAFT, ACTIVE, INACTIVE, or COMPLETED';
 COMMENT ON COLUMN kpis.is_deleted IS 'Soft delete flag for KPIs';
 
@@ -86,7 +83,6 @@ CREATE TABLE kpi_parameters (
     kpi_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    employee_id VARCHAR(50) NOT NULL,
     target_value INTEGER NOT NULL DEFAULT 0,
     is_required BOOLEAN NOT NULL DEFAULT TRUE,
     created_by BIGINT,
@@ -112,7 +108,7 @@ COMMENT ON COLUMN kpi_parameters.kpi_id IS 'Foreign key reference to kpis table'
 CREATE TABLE employee_kpi_parameters (
     id BIGSERIAL PRIMARY KEY,
     kpi_parameter_id BIGINT NOT NULL,
-    employee_id BIGINT NOT NULL,
+    employee_id VARCHAR(50) NOT NULL,
     progress_value INTEGER,
     notes TEXT,
     comment TEXT,
@@ -130,6 +126,27 @@ CREATE TABLE employee_kpi_parameters (
 CREATE INDEX idx_emp_kpi_param_kpi_parameter_id ON employee_kpi_parameters(kpi_parameter_id);
 CREATE INDEX idx_emp_kpi_param_employee_id ON employee_kpi_parameters(employee_id);
 CREATE INDEX idx_emp_kpi_param_composite ON employee_kpi_parameters(kpi_parameter_id, employee_id);
+
+-- =====================================================
+-- Table: employee_kpis
+-- Description: Tracks which KPIs are assigned to which employees
+-- =====================================================
+CREATE TABLE employee_kpis (
+    id BIGSERIAL PRIMARY KEY,
+    kpi_id BIGINT NOT NULL,
+    employee_id VARCHAR(50) NOT NULL,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_employee_kpis_kpi FOREIGN KEY (kpi_id) REFERENCES kpis (id) ON DELETE CASCADE,
+    CONSTRAINT fk_employee_kpis_employee FOREIGN KEY (employee_id) REFERENCES employees (employee_id) ON DELETE CASCADE,
+    CONSTRAINT uq_employee_kpi UNIQUE (kpi_id, employee_id)
+);
+
+-- Indexes for employee_kpis table
+CREATE INDEX idx_employee_kpi_employee_id ON employee_kpis (employee_id);
+CREATE INDEX idx_employee_kpi_kpi_id ON employee_kpis (kpi_id);
 
 -- Comments for employee_kpi_parameters table
 COMMENT ON TABLE employee_kpi_parameters IS 'Tracks individual employee progress on KPI parameters';

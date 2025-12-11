@@ -15,7 +15,6 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "kpis", indexes = {
-        @Index(name = "idx_kpi_employee_id", columnList = "employee_id"),
         @Index(name = "idx_kpi_status", columnList = "status"),
         @Index(name = "idx_kpi_deleted", columnList = "is_deleted")
 })
@@ -27,9 +26,6 @@ import java.time.Instant;
 @AllArgsConstructor
 @SuperBuilder(toBuilder = true)
 public class KPI extends BaseEntity {
-
-    @Column(name = "employee_id", nullable = false, length = 50)
-    private String employeeId;
 
     @Column(name = "name", nullable = false, length = 255)
     private String name;

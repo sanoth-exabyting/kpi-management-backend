@@ -3,59 +3,60 @@ package org.example.kpiservice.service;
 import org.example.kpiservice.dtos.request.CreateKPIRequest;
 import org.example.kpiservice.dtos.request.UpdateKPIRequest;
 import org.example.kpiservice.dtos.response.KPIResponse;
+import org.example.kpiservice.dtos.request.AssignEmployeesToKPIRequest;
 
 import java.util.List;
-import java.util.Map;
 
-/**
- * Service for handling KPI operations
- */
 public interface KPIService {
 
-    /**
-     * Create a new KPI
-     *
-     * @param request   Create KPI request
-     * @param userEmail Authenticated user's email
-     * @param teams     User's teams with roles from JWT
-     * @return Created KPI response
-     */
-    KPIResponse createKPI(CreateKPIRequest request, String userEmail, List<Map<String, Object>> teams);
+    KPIResponse createKPI(CreateKPIRequest request, String userEmail);
 
-    /**
-     * Get user's ACTIVE KPIs
-     *
-     * @param teams User's teams from JWT
-     * @return List of ACTIVE KPIs for user's teams
-     */
-    List<KPIResponse> getUserKPIs(String userEmail, List<Map<String, Object>> teams);
+    List<KPIResponse> getUserKPIs(String userEmail);
 
-    /**
-     * Get KPI by ID with team authorization check
-     *
-     * @param kpiId KPI ID
-     * @param teams User's teams from JWT
-     * @return KPI response
-     */
-    KPIResponse getKPIById(Long kpiId, String userEmail, List<Map<String, Object>> teams);
+    KPIResponse getKPIById(Long kpiId, String userEmail);
 
-    /**
-     * Update KPI (LEAD only)
-     *
-     * @param kpiId     KPI ID
-     * @param request   Update request
-     * @param userEmail Authenticated user's email
-     * @param teams     User's teams from JWT
-     * @return Updated KPI response
-     */
-    KPIResponse updateKPI(Long kpiId, UpdateKPIRequest request, String userEmail, List<Map<String, Object>> teams);
+    KPIResponse updateKPI(Long kpiId, UpdateKPIRequest request, String userEmail);
 
-    /**
-     * Delete KPI (soft delete, LEAD only)
-     *
-     * @param kpiId     KPI ID
-     * @param userEmail Authenticated user's email
-     * @param teams     User's teams from JWT
-     */
-    void deleteKPI(Long kpiId, String userEmail, List<Map<String, Object>> teams);
+    void deleteKPI(Long kpiId, String userEmail);
+
+    void assignEmployeesToKPI(Long kpiId, AssignEmployeesToKPIRequest request, String userEmail,
+            jakarta.servlet.http.HttpServletRequest httpRequest);
+
+    List<org.example.kpiservice.dtos.response.EmployeeResponse> getKPIAssignees(Long kpiId, String userEmail);
+
+    org.example.kpiservice.dtos.response.EmployeeResponse getKPIAssigneeById(Long kpiId, String employeeId,
+            String userEmail);
+
+    void removeKPIAssignee(Long kpiId, String employeeId, String userEmail);
+
+    List<KPIResponse> getCurrentUserKPIs(String employeeId);
+
+    KPIResponse getCurrentUserKPIById(Long kpiId, String employeeId);
+
+    List<org.example.kpiservice.dtos.response.KPIParameterResponse> getCurrentUserKPIParameters(Long kpiId,
+            String employeeId);
+
+    org.example.kpiservice.dtos.response.KPIParameterResponse getCurrentUserKPIParameterById(Long kpiId,
+            Long parameterId, String employeeId);
+
+    org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse createCurrentUserProgress(Long kpiId,
+            Long parameterId, org.example.kpiservice.dtos.request.CreateProgressRequest request, String employeeId);
+
+    org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse getCurrentUserProgress(Long kpiId,
+            Long parameterId, String employeeId);
+
+    org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse updateCurrentUserProgress(Long kpiId,
+            Long parameterId, org.example.kpiservice.dtos.request.CreateProgressRequest request, String employeeId);
+
+    List<org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse> getCurrentUserKPIProgresses(Long kpiId,
+            String employeeId);
+
+    List<org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse> getAssigneeProgresses(Long kpiId,
+            String assigneeId, String currentUserEmail);
+
+    org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse getAssigneeProgressById(Long kpiId,
+            String assigneeId, Long progressId, String currentUserEmail);
+
+    org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse updateAssigneeProgressValue(Long kpiId,
+            String assigneeId, Long progressId, Integer progressValue, String currentUserEmail);
 }

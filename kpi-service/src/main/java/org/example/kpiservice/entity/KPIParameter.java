@@ -30,9 +30,6 @@ public class KPIParameter extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "employee_id", nullable = false, length = 50)
-    private String employeeId;
-
     @Column(name = "target_value", nullable = false)
     @Min(0)
     @Max(100)

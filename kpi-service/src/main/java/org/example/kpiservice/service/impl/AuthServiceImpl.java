@@ -74,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
                 .toList();
 
         // Generate JWT token with teams
-        String token = jwtUtil.generateToken(employee.getEmail(), teams);
+        String token = jwtUtil.generateToken(employee.getEmail(), employee.getEmployeeId(), teams);
 
         log.info("User logged in successfully: {} with {} team(s)", email, teams.size());
 
@@ -187,7 +187,7 @@ public class AuthServiceImpl implements AuthService {
                         org.example.kpiservice.secondary.enums.EmployeeStatus.TERMINATED);
         if (employeeOptional.isPresent()) {
             org.example.kpiservice.secondary.entity.Employee employee = employeeOptional.get();
-            String token = jwtUtil.generateToken(employee.getEmail());
+            String token = jwtUtil.generateToken(employee.getEmail(), employee.getEmployeeId());
             return Optional.of(LoginResponse.builder()
                     .accessToken(token)
                     .employeeId(employee.getEmployeeId())
