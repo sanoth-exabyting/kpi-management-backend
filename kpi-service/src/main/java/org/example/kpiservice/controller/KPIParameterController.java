@@ -56,7 +56,7 @@ public class KPIParameterController {
         List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
         // Create KPI parameter
-        KPIParameterResponse response = kpiParameterService.createKPIParameter(kpiId, request, userEmail, teams);
+        KPIParameterResponse response = kpiParameterService.createKPIParameter(kpiId, request, userEmail);
 
         return ApiResponseEntity.created(response);
     }
@@ -75,8 +75,12 @@ public class KPIParameterController {
         // Extract teams from JWT
         List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
+        // Get authenticated user's email
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
         // Get KPI parameters
-        List<KPIParameterResponse> parameters = kpiParameterService.getKPIParameters(kpiId, teams);
+        List<KPIParameterResponse> parameters = kpiParameterService.getKPIParameters(kpiId, userEmail);
 
         return ApiResponseEntity.ok(parameters);
     }
@@ -97,8 +101,12 @@ public class KPIParameterController {
         // Extract teams from JWT
         List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
+        // Get authenticated user's email
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
         // Get KPI parameter
-        KPIParameterResponse parameter = kpiParameterService.getKPIParameterById(kpiId, parameterId, teams);
+        KPIParameterResponse parameter = kpiParameterService.getKPIParameterById(kpiId, parameterId, userEmail);
 
         return ApiResponseEntity.ok(parameter);
     }
@@ -125,8 +133,7 @@ public class KPIParameterController {
         List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
         // Update KPI parameter
-        KPIParameterResponse response = kpiParameterService.updateKPIParameter(kpiId, parameterId, request, userEmail,
-                teams);
+        KPIParameterResponse response = kpiParameterService.updateKPIParameter(kpiId, parameterId, request, userEmail);
 
         return ApiResponseEntity.ok(response);
     }
@@ -152,7 +159,7 @@ public class KPIParameterController {
         List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
         // Delete KPI parameter
-        kpiParameterService.deleteKPIParameter(kpiId, parameterId, userEmail, teams);
+        kpiParameterService.deleteKPIParameter(kpiId, parameterId, userEmail);
 
         return ApiResponseEntity.ok(null);
     }

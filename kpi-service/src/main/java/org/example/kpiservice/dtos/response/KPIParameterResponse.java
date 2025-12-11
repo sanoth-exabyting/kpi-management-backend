@@ -1,5 +1,6 @@
 package org.example.kpiservice.dtos.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class KPIParameterResponse {
 
     @Schema(description = "Parameter ID", example = "1")
@@ -26,6 +28,12 @@ public class KPIParameterResponse {
 
     @Schema(description = "Parameter description", example = "Target revenue in USD")
     private String description;
+
+    @Schema(description = "Target value", example = "100")
+    private Integer targetValue;
+
+    @Schema(description = "Is required", example = "true")
+    private Boolean isRequired;
 
     @Schema(description = "Created by employee ID", example = "123")
     private Long createdBy;

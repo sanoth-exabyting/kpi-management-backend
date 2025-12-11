@@ -39,8 +39,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
 
         @Override
         @Transactional
-        public KPIParameterResponse createKPIParameter(Long kpiId, CreateKPIParameterRequest request, String userEmail,
-                        List<Map<String, Object>> teams) {
+        public KPIParameterResponse createKPIParameter(Long kpiId, CreateKPIParameterRequest request, String userEmail) {
                 // Get employee by email
                 Employee employee = employeeRepository.findByEmail(userEmail)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
@@ -49,14 +48,19 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if user is LEAD of the KPI's team
-                teamAccessValidator.checkLeadRole(kpi.getTeamId(), teams);
+                // Validate access (Creator only)
+                if (!kpi.getCreatedBy().equals(employee.getId())) {
+                        throw ApiException.create(HttpStatus.FORBIDDEN,
+                                        "Only the creator of the KPI can add parameters");
+                }
 
                 // Create KPI parameter
                 KPIParameter parameter = KPIParameter.builder()
                                 .kpi(kpi)
                                 .name(request.getName())
                                 .description(request.getDescription())
+                                .targetValue(request.getTargetValue())
+                                .isRequired(request.getIsRequired())
                                 .build();
 
                 // Set audit fields
@@ -73,13 +77,12 @@ public class KPIParameterServiceImpl implements KPIParameterService {
         }
 
         @Override
-        public List<KPIParameterResponse> getKPIParameters(Long kpiId, List<Map<String, Object>> teams) {
+        public List<KPIParameterResponse> getKPIParameters(Long kpiId, String userEmail) {
                 // Find KPI by ID
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                // Access: Open for authenticated users
 
                 // Get all parameters for the KPI
                 List<KPIParameter> parameters = kpiParameterRepository.findAllByKpiId(kpiId);
@@ -92,13 +95,12 @@ public class KPIParameterServiceImpl implements KPIParameterService {
         }
 
         @Override
-        public KPIParameterResponse getKPIParameterById(Long kpiId, Long parameterId, List<Map<String, Object>> teams) {
+        public KPIParameterResponse getKPIParameterById(Long kpiId, Long parameterId, String userEmail) {
                 // Find KPI by ID
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                // Access: Open for authenticated users
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -118,7 +120,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
         @Override
         @Transactional
         public KPIParameterResponse updateKPIParameter(Long kpiId, Long parameterId, UpdateKPIParameterRequest request,
-                        String userEmail, List<Map<String, Object>> teams) {
+                        String userEmail) {
                 // Get employee by email
                 Employee employee = employeeRepository.findByEmail(userEmail)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
@@ -127,8 +129,11 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if user is LEAD of the KPI's team
-                teamAccessValidator.checkLeadRole(kpi.getTeamId(), teams);
+                // Validate access (Creator only)
+                if (!kpi.getCreatedBy().equals(employee.getId())) {
+                        throw ApiException.create(HttpStatus.FORBIDDEN,
+                                        "Only the creator of the KPI can update parameters");
+                }
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -147,6 +152,12 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 if (request.getDescription() != null) {
                         parameter.setDescription(request.getDescription());
                 }
+                if (request.getTargetValue() != null) {
+                        parameter.setTargetValue(request.getTargetValue());
+                }
+                if (request.getIsRequired() != null) {
+                        parameter.setIsRequired(request.getIsRequired());
+                }
 
                 // Update audit fields (created_by and created_at remain unchanged)
                 parameter.setUpdatedBy(employee.getId());
@@ -163,8 +174,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
 
         @Override
         @Transactional
-        public void deleteKPIParameter(Long kpiId, Long parameterId, String userEmail,
-                        List<Map<String, Object>> teams) {
+        public void deleteKPIParameter(Long kpiId, Long parameterId, String userEmail) {
                 // Get employee by email
                 Employee employee = employeeRepository.findByEmail(userEmail)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
@@ -173,8 +183,11 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if user is LEAD of the KPI's team
-                teamAccessValidator.checkLeadRole(kpi.getTeamId(), teams);
+                // Validate access (Creator only)
+                if (!kpi.getCreatedBy().equals(employee.getId())) {
+                        throw ApiException.create(HttpStatus.FORBIDDEN,
+                                        "Only the creator of the KPI can delete parameters");
+                }
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -205,8 +218,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                // Access: Open for authenticated users (Self-assignment/progress)
 
                 // Find parameter by ID
                 KPIParameter parameter = kpiParameterRepository.findById(parameterId)
@@ -220,7 +232,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
 
                 // Check if employee already has progress for this parameter
                 boolean progressExists = employeeKPIParameterRepository.existsByKpiParameterIdAndEmployeeId(
-                                parameterId, employee.getId());
+                                parameterId, employee.getEmployeeId());
 
                 if (progressExists) {
                         throw ApiException.create(HttpStatus.CONFLICT,
@@ -230,7 +242,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 // Create employee KPI parameter progress
                 EmployeeKPIParameter progress = EmployeeKPIParameter.builder()
                                 .kpiParameter(parameter)
-                                .employeeId(employee.getId())
+                                .employeeId(employee.getEmployeeId())
                                 .progressValue(request.getProgressValue())
                                 .notes(request.getNotes())
                                 .comment(request.getComment())
@@ -260,12 +272,11 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                // Access: Open for authenticated users (fetching own progress)
 
                 // Get all progress for this KPI created by the current user
                 List<EmployeeKPIParameter> progressList = employeeKPIParameterRepository
-                                .findAllByKpiIdAndEmployeeId(kpiId, employee.getId());
+                                .findAllByKpiIdAndEmployeeId(kpiId, employee.getEmployeeId());
 
                 log.info("Retrieved {} progress records for KPI: {} by employee: {}", progressList.size(), kpiId,
                                 employee.getEmployeeId());
@@ -287,8 +298,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                // Access: Open for authenticated users
 
                 // Find progress by ID
                 EmployeeKPIParameter progress = employeeKPIParameterRepository.findById(progressId)
@@ -301,7 +311,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 }
 
                 // Verify progress belongs to the current user
-                if (!progress.getEmployeeId().equals(employee.getId())) {
+                if (!progress.getEmployeeId().equals(employee.getEmployeeId())) {
                         throw ApiException.create(HttpStatus.FORBIDDEN,
                                         "You do not have access to this progress record");
                 }
@@ -324,8 +334,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 KPI kpi = kpiRepository.findById(kpiId)
                                 .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
 
-                // Check if KPI's team_id is in user's teams
-                teamAccessValidator.checkTeamMembership(kpi.getTeamId(), teams);
+                // Access: Open for authenticated users
 
                 // Find progress by ID
                 EmployeeKPIParameter progress = employeeKPIParameterRepository.findById(progressId)
@@ -338,7 +347,7 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                 }
 
                 // Verify progress belongs to the current user
-                if (!progress.getEmployeeId().equals(employee.getId())) {
+                if (!progress.getEmployeeId().equals(employee.getEmployeeId())) {
                         throw ApiException.create(HttpStatus.FORBIDDEN,
                                         "You do not have access to update this progress record");
                 }
@@ -373,6 +382,8 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                                 .kpiId(parameter.getKpi().getId())
                                 .name(parameter.getName())
                                 .description(parameter.getDescription())
+                                .targetValue(parameter.getTargetValue())
+                                .isRequired(parameter.getIsRequired())
                                 .createdBy(parameter.getCreatedBy())
                                 .createdAt(parameter.getCreatedAt())
                                 .updatedBy(parameter.getUpdatedBy())

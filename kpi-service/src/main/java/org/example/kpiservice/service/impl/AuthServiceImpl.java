@@ -74,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
                 .toList();
 
         // Generate JWT token with teams
-        String token = jwtUtil.generateToken(employee.getEmail(), teams);
+        String token = jwtUtil.generateToken(employee.getEmail(), employee.getEmployeeId(), teams);
 
         log.info("User logged in successfully: {} with {} team(s)", email, teams.size());
 
@@ -118,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
         // Hash the password
         String hashedPassword = passwordEncoder.encode(request.getPassword());
 
-        // Create new employee in primary DB with data from secondary DB
+        // Create a new employee in primary DB with data from secondary DB
         org.example.kpiservice.entity.Employee newEmployee = org.example.kpiservice.entity.Employee.builder()
                 .email(secondaryEmployee.getEmail())
                 .password(hashedPassword)
@@ -187,7 +187,7 @@ public class AuthServiceImpl implements AuthService {
                         org.example.kpiservice.secondary.enums.EmployeeStatus.TERMINATED);
         if (employeeOptional.isPresent()) {
             org.example.kpiservice.secondary.entity.Employee employee = employeeOptional.get();
-            String token = jwtUtil.generateToken(employee.getEmail());
+            String token = jwtUtil.generateToken(employee.getEmail(), employee.getEmployeeId());
             return Optional.of(LoginResponse.builder()
                     .accessToken(token)
                     .employeeId(employee.getEmployeeId())

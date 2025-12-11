@@ -5,6 +5,7 @@ import org.example.kpiservice.secondary.enums.EmployeeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,4 +15,8 @@ public interface SecondaryEmployeeRepository extends JpaRepository<Employee, Lon
     Optional<Employee> findByEmployeeId(String employeeId);
 
     Optional<Employee> findByEmailAndStatusNot(String email, EmployeeStatus status);
+
+    List<Employee> findAllByEmployeeIdIn(List<String> employeeIds);
+
+    List<Employee> findAllByEmployeeIdInAndStatusNot(List<String> employeeIds, EmployeeStatus status);
 }

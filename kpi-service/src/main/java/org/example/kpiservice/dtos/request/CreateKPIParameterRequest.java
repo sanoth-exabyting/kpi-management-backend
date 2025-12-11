@@ -20,4 +20,14 @@ public class CreateKPIParameterRequest {
 
     @Schema(description = "Parameter description", example = "Target revenue in USD")
     private String description;
+
+    @Schema(description = "Target value", example = "100", defaultValue = "0")
+    @jakarta.validation.constraints.Min(0)
+    @jakarta.validation.constraints.Max(100)
+    @Builder.Default
+    private Integer targetValue = 0;
+
+    @Schema(description = "Is required", example = "true", defaultValue = "true")
+    @Builder.Default
+    private Boolean isRequired = true;
 }

@@ -1,5 +1,6 @@
 package org.example.kpiservice.dtos.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EmployeeKPIProgressResponse {
 
     @Schema(description = "Progress ID", example = "1")
@@ -22,7 +24,7 @@ public class EmployeeKPIProgressResponse {
     private Long kpiParameterId;
 
     @Schema(description = "Employee ID", example = "123")
-    private Long employeeId;
+    private String employeeId;
 
     @Schema(description = "Progress value (0-100)", example = "75")
     private Integer progressValue;

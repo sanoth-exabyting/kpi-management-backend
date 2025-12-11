@@ -27,9 +27,8 @@ public class EmployeeKPIParameter extends BaseEntity {
     @JoinColumn(name = "kpi_parameter_id", nullable = false)
     private KPIParameter kpiParameter;
 
-    @Column(name = "employee_id", nullable = false)
-    @JdbcTypeCode(SqlTypes.BIGINT)
-    private Long employeeId;
+    @Column(name = "employee_id", nullable = false, length = 50)
+    private String employeeId;
 
     @Min(0)
     @Max(100)
@@ -41,4 +40,8 @@ public class EmployeeKPIParameter extends BaseEntity {
 
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
+
+    @Column(name = "is_completed", nullable = false)
+    @lombok.Builder.Default
+    private Boolean isCompleted = true;
 }
