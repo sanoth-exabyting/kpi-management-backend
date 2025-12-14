@@ -18,6 +18,7 @@ import org.example.kpiservice.service.KPIService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse;
 
 import java.util.List;
 
@@ -425,7 +426,7 @@ public class KPIServiceImpl implements KPIService {
 
         @Override
         @Transactional
-        public org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse createCurrentUserProgress(Long kpiId,
+        public EmployeeKPIProgressResponse createCurrentUserProgress(Long kpiId,
                         Long parameterId, CreateProgressRequest request,
                         String employeeId) {
                 // Verify KPI is assigned to this employee
@@ -478,7 +479,7 @@ public class KPIServiceImpl implements KPIService {
 
         @Override
         @Transactional(readOnly = true)
-        public org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse getCurrentUserProgress(Long kpiId,
+        public EmployeeKPIProgressResponse getCurrentUserProgress(Long kpiId,
                         Long parameterId, String employeeId) {
                 // Verify KPI is assigned to this employee
                 if (!employeeKPIRepository.existsByEmployeeIdAndKpiId(employeeId, kpiId)) {
@@ -507,7 +508,7 @@ public class KPIServiceImpl implements KPIService {
 
         @Override
         @Transactional
-        public org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse updateCurrentUserProgress(Long kpiId,
+        public EmployeeKPIProgressResponse updateCurrentUserProgress(Long kpiId,
                         Long parameterId, CreateProgressRequest request,
                         String employeeId) {
                 // Verify KPI is assigned to this employee
@@ -562,7 +563,7 @@ public class KPIServiceImpl implements KPIService {
 
         @Override
         @Transactional(readOnly = true)
-        public List<org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse> getCurrentUserKPIProgresses(
+        public List<EmployeeKPIProgressResponse> getCurrentUserKPIProgresses(
                         Long kpiId, String employeeId) {
                 // Verify KPI is assigned to this employee
                 if (!employeeKPIRepository.existsByEmployeeIdAndKpiId(employeeId, kpiId)) {
@@ -581,7 +582,7 @@ public class KPIServiceImpl implements KPIService {
 
         @Override
         @Transactional(readOnly = true)
-        public List<org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse> getAssigneeProgresses(Long kpiId,
+        public List<EmployeeKPIProgressResponse> getAssigneeProgresses(Long kpiId,
                         String assigneeId, String currentUserEmail) {
                 // Get current employee
                 Employee currentEmployee = employeeRepository.findByEmail(currentUserEmail)
@@ -609,7 +610,7 @@ public class KPIServiceImpl implements KPIService {
 
         @Override
         @Transactional(readOnly = true)
-        public org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse getAssigneeProgressById(Long kpiId,
+        public EmployeeKPIProgressResponse getAssigneeProgressById(Long kpiId,
                         String assigneeId, Long progressId, String currentUserEmail) {
                 // Get current employee
                 Employee currentEmployee = employeeRepository.findByEmail(currentUserEmail)
@@ -648,7 +649,7 @@ public class KPIServiceImpl implements KPIService {
 
         @Override
         @Transactional
-        public org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse updateAssigneeProgressValue(Long kpiId,
+        public EmployeeKPIProgressResponse updateAssigneeProgressValue(Long kpiId,
                         String assigneeId, Long progressId, Integer progressValue, String currentUserEmail) {
                 // Get current employee
                 Employee currentEmployee = employeeRepository.findByEmail(currentUserEmail)
@@ -699,9 +700,9 @@ public class KPIServiceImpl implements KPIService {
                 return mapToProgressResponse(updatedProgress);
         }
 
-        private org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse mapToProgressResponse(
+        private EmployeeKPIProgressResponse mapToProgressResponse(
                         org.example.kpiservice.entity.EmployeeKPIParameter progress) {
-                return org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse.builder()
+                return EmployeeKPIProgressResponse.builder()
                                 .id(progress.getId())
                                 .kpiParameterId(progress.getKpiParameter().getId())
                                 .employeeId(progress.getEmployeeId())
