@@ -45,15 +45,11 @@ public class KPIParameterController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponseEntity<KPIParameterResponse, Void>> createKPIParameter(
             @PathVariable Long kpiId,
-            @Valid @RequestBody CreateKPIParameterRequest request,
-            HttpServletRequest httpRequest) {
+            @Valid @RequestBody CreateKPIParameterRequest request) {
 
         // Get authenticated user's email
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
-
-        // Extract teams from JWT
-        List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
         // Create KPI parameter
         KPIParameterResponse response = kpiParameterService.createKPIParameter(kpiId, request, userEmail);
@@ -69,11 +65,7 @@ public class KPIParameterController {
     })
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponseEntity<List<KPIParameterResponse>, Void>> getKPIParameters(
-            @PathVariable Long kpiId,
-            HttpServletRequest httpRequest) {
-
-        // Extract teams from JWT
-        List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
+            @PathVariable Long kpiId) {
 
         // Get authenticated user's email
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -95,11 +87,7 @@ public class KPIParameterController {
     @GetMapping(value = "/{parameterId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponseEntity<KPIParameterResponse, Void>> getKPIParameterById(
             @PathVariable Long kpiId,
-            @PathVariable Long parameterId,
-            HttpServletRequest httpRequest) {
-
-        // Extract teams from JWT
-        List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
+            @PathVariable Long parameterId) {
 
         // Get authenticated user's email
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -122,15 +110,11 @@ public class KPIParameterController {
     public ResponseEntity<ApiResponseEntity<KPIParameterResponse, Void>> updateKPIParameter(
             @PathVariable Long kpiId,
             @PathVariable Long parameterId,
-            @RequestBody UpdateKPIParameterRequest request,
-            HttpServletRequest httpRequest) {
+            @RequestBody UpdateKPIParameterRequest request) {
 
         // Get authenticated user's email
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
-
-        // Extract teams from JWT
-        List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
         // Update KPI parameter
         KPIParameterResponse response = kpiParameterService.updateKPIParameter(kpiId, parameterId, request, userEmail);
@@ -148,15 +132,11 @@ public class KPIParameterController {
     @DeleteMapping("/{parameterId}")
     public ResponseEntity<ApiResponseEntity<Void, Void>> deleteKPIParameter(
             @PathVariable Long kpiId,
-            @PathVariable Long parameterId,
-            HttpServletRequest httpRequest) {
+            @PathVariable Long parameterId) {
 
         // Get authenticated user's email
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
-
-        // Extract teams from JWT
-        List<Map<String, Object>> teams = jwtHelper.extractTeams(httpRequest);
 
         // Delete KPI parameter
         kpiParameterService.deleteKPIParameter(kpiId, parameterId, userEmail);

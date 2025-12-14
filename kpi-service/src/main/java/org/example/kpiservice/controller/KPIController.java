@@ -22,7 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.List;
+
 
 @Tag(name = "KPIs", description = "KPI management endpoints")
 @RestController
@@ -66,7 +66,7 @@ public class KPIController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid token", content = @Content)
         })
         @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-        public ResponseEntity<ApiResponseEntity<List<KPIResponse>, Void>> getUserKPIs(HttpServletRequest httpRequest) {
+        public ResponseEntity<ApiResponseEntity<List<KPIResponse>, Void>> getUserKPIs() {
                 // Get authenticated user's email
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 String userEmail = authentication.getName();
@@ -85,8 +85,7 @@ public class KPIController {
         })
         @GetMapping(value = "/{kpiId}", produces = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<ApiResponseEntity<KPIResponse, Void>> getKPIById(
-                        @PathVariable Long kpiId,
-                        HttpServletRequest httpRequest) {
+                        @PathVariable Long kpiId) {
 
                 // Get authenticated user's email
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -108,8 +107,7 @@ public class KPIController {
         @PatchMapping(value = "/{kpiId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<ApiResponseEntity<KPIResponse, Void>> updateKPI(
                         @PathVariable Long kpiId,
-                        @RequestBody UpdateKPIRequest request,
-                        HttpServletRequest httpRequest) {
+                        @RequestBody UpdateKPIRequest request) {
 
                 // Get authenticated user's email
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -129,8 +127,7 @@ public class KPIController {
         })
         @DeleteMapping("/{kpiId}")
         public ResponseEntity<ApiResponseEntity<Void, Void>> deleteKPI(
-                        @PathVariable Long kpiId,
-                        HttpServletRequest httpRequest) {
+                        @PathVariable Long kpiId) {
 
                 // Get authenticated user's email
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -171,8 +168,7 @@ public class KPIController {
         })
         @GetMapping(value = "/{kpiId}/assignees", produces = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<ApiResponseEntity<java.util.List<org.example.kpiservice.dtos.response.EmployeeResponse>, Void>> getKPIAssignees(
-                        @PathVariable Long kpiId,
-                        HttpServletRequest httpRequest) {
+                        @PathVariable Long kpiId) {
 
                 // Get authenticated user's email
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -193,8 +189,7 @@ public class KPIController {
         @GetMapping(value = "/{kpiId}/assignees/{employeeId}", produces = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<ApiResponseEntity<org.example.kpiservice.dtos.response.EmployeeResponse, Void>> getKPIAssigneeById(
                         @PathVariable Long kpiId,
-                        @PathVariable String employeeId,
-                        HttpServletRequest httpRequest) {
+                        @PathVariable String employeeId) {
 
                 // Get authenticated user's email
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -215,8 +210,7 @@ public class KPIController {
         @DeleteMapping(value = "/{kpiId}/assignees/{employeeId}")
         public ResponseEntity<ApiResponseEntity<Void, Void>> removeKPIAssignee(
                         @PathVariable Long kpiId,
-                        @PathVariable String employeeId,
-                        HttpServletRequest httpRequest) {
+                        @PathVariable String employeeId) {
 
                 // Get authenticated user's email
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

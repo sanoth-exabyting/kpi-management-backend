@@ -3,7 +3,6 @@ package org.example.kpiservice.service;
 import org.example.kpiservice.dtos.request.CreateKPIParameterRequest;
 import org.example.kpiservice.dtos.request.CreateProgressRequest;
 import org.example.kpiservice.dtos.request.UpdateKPIParameterRequest;
-import org.example.kpiservice.dtos.request.UpdateProgressRequest;
 import org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse;
 import org.example.kpiservice.dtos.response.KPIParameterResponse;
 
@@ -25,13 +24,5 @@ public interface KPIParameterService {
     void deleteKPIParameter(Long kpiId, Long parameterId, String userEmail);
 
     EmployeeKPIProgressResponse createProgress(Long kpiId, Long parameterId, CreateProgressRequest request,
-            String userEmail, List<Map<String, Object>> teams);
-
-    List<EmployeeKPIProgressResponse> getUserKPIProgress(Long kpiId, String userEmail, List<Map<String, Object>> teams);
-
-    EmployeeKPIProgressResponse getKPIProgressById(Long kpiId, Long progressId, String userEmail,
-            List<Map<String, Object>> teams);
-
-    EmployeeKPIProgressResponse updateKPIProgress(Long kpiId, Long progressId, UpdateProgressRequest request,
             String userEmail, List<Map<String, Object>> teams);
 }

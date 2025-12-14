@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.kpiservice.dtos.request.AssignEmployeesToKPIRequest;
 import org.example.kpiservice.dtos.request.CreateKPIRequest;
+import org.example.kpiservice.dtos.request.CreateProgressRequest;
 import org.example.kpiservice.dtos.request.UpdateKPIRequest;
 import org.example.kpiservice.dtos.response.KPIResponse;
 import org.example.kpiservice.entity.Employee;
@@ -425,7 +426,7 @@ public class KPIServiceImpl implements KPIService {
         @Override
         @Transactional
         public org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse createCurrentUserProgress(Long kpiId,
-                        Long parameterId, org.example.kpiservice.dtos.request.CreateProgressRequest request,
+                        Long parameterId, CreateProgressRequest request,
                         String employeeId) {
                 // Verify KPI is assigned to this employee
                 if (!employeeKPIRepository.existsByEmployeeIdAndKpiId(employeeId, kpiId)) {
@@ -507,7 +508,7 @@ public class KPIServiceImpl implements KPIService {
         @Override
         @Transactional
         public org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse updateCurrentUserProgress(Long kpiId,
-                        Long parameterId, org.example.kpiservice.dtos.request.CreateProgressRequest request,
+                        Long parameterId, CreateProgressRequest request,
                         String employeeId) {
                 // Verify KPI is assigned to this employee
                 if (!employeeKPIRepository.existsByEmployeeIdAndKpiId(employeeId, kpiId)) {
