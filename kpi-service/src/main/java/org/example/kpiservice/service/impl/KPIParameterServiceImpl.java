@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.kpiservice.dtos.request.CreateKPIParameterRequest;
 import org.example.kpiservice.dtos.request.CreateProgressRequest;
 import org.example.kpiservice.dtos.request.UpdateKPIParameterRequest;
-import org.example.kpiservice.dtos.request.UpdateProgressRequest;
 import org.example.kpiservice.dtos.response.EmployeeKPIProgressResponse;
 import org.example.kpiservice.dtos.response.KPIParameterResponse;
 import org.example.kpiservice.entity.Employee;
@@ -259,121 +258,6 @@ public class KPIParameterServiceImpl implements KPIParameterService {
                                 parameterId, employee.getEmployeeId());
 
                 return mapProgressToResponse(savedProgress);
-        }
-
-        @Override
-        public List<EmployeeKPIProgressResponse> getUserKPIProgress(Long kpiId, String userEmail,
-                        List<Map<String, Object>> teams) {
-                // Get employee by email
-                Employee employee = employeeRepository.findByEmail(userEmail)
-                                .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
-
-                // Find KPI by ID
-                KPI kpi = kpiRepository.findById(kpiId)
-                                .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
-
-                // Access: Open for authenticated users (fetching own progress)
-
-                // Get all progress for this KPI created by the current user
-                List<EmployeeKPIParameter> progressList = employeeKPIParameterRepository
-                                .findAllByKpiIdAndEmployeeId(kpiId, employee.getEmployeeId());
-
-                log.info("Retrieved {} progress records for KPI: {} by employee: {}", progressList.size(), kpiId,
-                                employee.getEmployeeId());
-
-                return progressList.stream()
-                                .map(this::mapProgressToResponse)
-                                .toList();
-        }
-
-        @Override
-        @Transactional(readOnly = true)
-        public EmployeeKPIProgressResponse getKPIProgressById(Long kpiId, Long progressId, String userEmail,
-                        List<Map<String, Object>> teams) {
-                // Get employee by email
-                Employee employee = employeeRepository.findByEmail(userEmail)
-                                .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
-
-                // Find KPI by ID
-                KPI kpi = kpiRepository.findById(kpiId)
-                                .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
-
-                // Access: Open for authenticated users
-
-                // Find progress by ID
-                EmployeeKPIParameter progress = employeeKPIParameterRepository.findById(progressId)
-                                .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "Progress not found"));
-
-                // Verify progress belongs to the specified KPI
-                if (!progress.getKpiParameter().getKpi().getId().equals(kpiId)) {
-                        throw ApiException.create(HttpStatus.BAD_REQUEST,
-                                        "Progress does not belong to the specified KPI");
-                }
-
-                // Verify progress belongs to the current user
-                if (!progress.getEmployeeId().equals(employee.getEmployeeId())) {
-                        throw ApiException.create(HttpStatus.FORBIDDEN,
-                                        "You do not have access to this progress record");
-                }
-
-                log.info("Retrieved progress: {} for KPI: {} by employee: {}", progressId, kpiId,
-                                employee.getEmployeeId());
-
-                return mapProgressToResponse(progress);
-        }
-
-        @Override
-        @Transactional
-        public EmployeeKPIProgressResponse updateKPIProgress(Long kpiId, Long progressId, UpdateProgressRequest request,
-                        String userEmail, List<Map<String, Object>> teams) {
-                // Get employee by email
-                Employee employee = employeeRepository.findByEmail(userEmail)
-                                .orElseThrow(() -> ApiException.create(HttpStatus.UNAUTHORIZED, "Employee not found"));
-
-                // Find KPI by ID
-                KPI kpi = kpiRepository.findById(kpiId)
-                                .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "KPI not found"));
-
-                // Access: Open for authenticated users
-
-                // Find progress by ID
-                EmployeeKPIParameter progress = employeeKPIParameterRepository.findById(progressId)
-                                .orElseThrow(() -> ApiException.create(HttpStatus.NOT_FOUND, "Progress not found"));
-
-                // Verify progress belongs to the specified KPI
-                if (!progress.getKpiParameter().getKpi().getId().equals(kpiId)) {
-                        throw ApiException.create(HttpStatus.BAD_REQUEST,
-                                        "Progress does not belong to the specified KPI");
-                }
-
-                // Verify progress belongs to the current user
-                if (!progress.getEmployeeId().equals(employee.getEmployeeId())) {
-                        throw ApiException.create(HttpStatus.FORBIDDEN,
-                                        "You do not have access to update this progress record");
-                }
-
-                // Update only provided fields (partial update)
-                if (request.getProgressValue() != null) {
-                        progress.setProgressValue(request.getProgressValue());
-                }
-                if (request.getNotes() != null) {
-                        progress.setNotes(request.getNotes());
-                }
-                if (request.getComment() != null) {
-                        progress.setComment(request.getComment());
-                }
-
-                // Update audit fields (created_by and created_at remain unchanged)
-                progress.setUpdatedBy(employee.getId());
-                // updated_at will be automatically set by @PreUpdate in BaseEntity
-
-                // Save updated progress
-                EmployeeKPIParameter updatedProgress = employeeKPIParameterRepository.save(progress);
-
-                log.info("Employee progress updated: {} for KPI: {} by employee: {}", progressId, kpiId,
-                                employee.getEmployeeId());
-
-                return mapProgressToResponse(updatedProgress);
         }
 
         private KPIParameterResponse mapToResponse(KPIParameter parameter) {

@@ -1,0 +1,953 @@
+{
+	"info": {
+		"_postman_id": "kpi-mgmt-system-2024",
+		"name": "KPI Management System",
+		"description": "Complete API collection for KPI Management System with authentication, team management, KPI tracking, and employee progress monitoring.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "kpi-mgmt-system"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('employee_id', response.employeeId);",
+									"    pm.test('Registration successful', () => {",
+									"        pm.expect(response.email).to.exist;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@exabyting.com\",\n  \"password\": \"SecurePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Register a new employee with email that exists in company directory"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('access_token', response.data.accessToken);",
+									"    pm.environment.set('refresh_token', response.refreshToken);",
+									"    pm.environment.set('employee_id', response.employeeId);",
+									"    pm.test('Login successful', () => {",
+									"        pm.expect(response.accessToken).to.exist;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@exabyting.com\",\n  \"password\": \"SecurePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Authenticate with email and password to receive JWT tokens"
+					},
+					"response": []
+				},
+				{
+					"name": "Google OAuth Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('access_token', response.accessToken);",
+									"    pm.environment.set('refresh_token', response.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idToken\": \"google_oauth_id_token_here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login/google",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login", "google"]
+						},
+						"description": "Authenticate using Google OAuth ID token"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for registration and login"
+		},
+		{
+			"name": "Teams",
+			"item": [
+				{
+					"name": "Get My Teams",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.length > 0) {",
+									"        pm.environment.set('team_id', response.data[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/teams",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "teams"]
+						},
+						"description": "Get list of teams that the authenticated user belongs to"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Employees",
+			"item": [
+				{
+					"name": "Get Employees",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.length > 0) {",
+									"        pm.environment.set('assignee_employee_id', response.data[0].employeeId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/employees",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "employees"]
+						},
+						"description": "Get employees in teams where current user is Team Lead"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "KPI Management",
+			"item": [
+				{
+					"name": "Create KPI",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('kpi_id', response.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Q1 Sales Target\",\n  \"description\": \"Achieve 100 sales calls and $500K revenue\",\n  \"teamId\": {{team_id}},\n  \"startAt\": \"2024-01-01T00:00:00Z\",\n  \"endAt\": \"2024-03-31T23:59:59Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "kpis"]
+						},
+						"description": "Create a new KPI (Team Lead only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My KPIs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "kpis"]
+						},
+						"description": "Get all KPIs created by current user"
+					},
+					"response": []
+				},
+				{
+					"name": "Get KPI by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "kpis", "{{kpi_id}}"]
+						},
+						"description": "Get specific KPI details"
+					},
+					"response": []
+				},
+				{
+					"name": "Update KPI",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Q1 Sales Target - Updated\",\n  \"description\": \"Updated description\",\n  \"endAt\": \"2024-04-15T23:59:59Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "kpis", "{{kpi_id}}"]
+						},
+						"description": "Update KPI details (creator only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete KPI",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "kpis", "{{kpi_id}}"]
+						},
+						"description": "Delete KPI (creator only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "KPI Assignments",
+			"item": [
+				{
+					"name": "Assign Employees to KPI",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employeeIds\": [\"{{assignee_employee_id}}\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/assignees",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "kpis", "{{kpi_id}}", "assignees"]
+						},
+						"description": "Assign employees to a KPI (creator only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get KPI Assignees",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/assignees",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "kpis", "{{kpi_id}}", "assignees"]
+						},
+						"description": "Get list of employees assigned to KPI"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assignee Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/assignees/{{assignee_employee_id}}",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"kpis",
+								"{{kpi_id}}",
+								"assignees",
+								"{{assignee_employee_id}}"
+							]
+						},
+						"description": "Get specific assignee details"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Assignee",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/assignees/{{assignee_employee_id}}",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"kpis",
+								"{{kpi_id}}",
+								"assignees",
+								"{{assignee_employee_id}}"
+							]
+						},
+						"description": "Remove employee from KPI (creator only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "KPI Parameters",
+			"item": [
+				{
+					"name": "Create Parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('parameter_id', response.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Total Sales Calls\",\n  \"description\": \"Number of sales calls made\",\n  \"targetValue\": \"100\",\n  \"weight\": 50,\n  \"isRequired\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/parameters",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "kpis", "{{kpi_id}}", "parameters"]
+						},
+						"description": "Add a parameter to KPI (creator only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Parameters",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/parameters",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "kpis", "{{kpi_id}}", "parameters"]
+						},
+						"description": "Get all parameters for a KPI"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Parameter by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/parameters/{{parameter_id}}",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"kpis",
+								"{{kpi_id}}",
+								"parameters",
+								"{{parameter_id}}"
+							]
+						},
+						"description": "Get specific parameter details"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Parameter",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Total Sales Calls - Updated\",\n  \"targetValue\": \"150\",\n  \"weight\": 60\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/parameters/{{parameter_id}}",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"kpis",
+								"{{kpi_id}}",
+								"parameters",
+								"{{parameter_id}}"
+							]
+						},
+						"description": "Update parameter (creator only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Parameter",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/parameters/{{parameter_id}}",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"kpis",
+								"{{kpi_id}}",
+								"parameters",
+								"{{parameter_id}}"
+							]
+						},
+						"description": "Delete parameter (creator only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Assignee Progress (Team Lead View)",
+			"item": [
+				{
+					"name": "Get Assignee Progress List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/assignees/{{assignee_employee_id}}/progresses",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"kpis",
+								"{{kpi_id}}",
+								"assignees",
+								"{{assignee_employee_id}}",
+								"progresses"
+							]
+						},
+						"description": "View all progress records of an assignee (creator only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assignee Progress by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data) {",
+									"        pm.environment.set('progress_id', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/assignees/{{assignee_employee_id}}/progresses/{{progress_id}}",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"kpis",
+								"{{kpi_id}}",
+								"assignees",
+								"{{assignee_employee_id}}",
+								"progresses",
+								"{{progress_id}}"
+							]
+						},
+						"description": "View specific progress details (creator only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Assignee Progress Value",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"progressValue\": 85\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/kpis/{{kpi_id}}/assignees/{{assignee_employee_id}}/progresses/{{progress_id}}",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"kpis",
+								"{{kpi_id}}",
+								"assignees",
+								"{{assignee_employee_id}}",
+								"progresses",
+								"{{progress_id}}"
+							]
+						},
+						"description": "Correct/adjust assignee progress value (creator only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "My Profile & KPIs",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "me"]
+						},
+						"description": "Get current user profile"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Assigned KPIs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/me/kpis",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "me", "kpis"]
+						},
+						"description": "Get all KPIs assigned to me"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My KPI Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/me/kpis/{{kpi_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "me", "kpis", "{{kpi_id}}"]
+						},
+						"description": "Get details of KPI assigned to me"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My KPI Parameters",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/me/kpis/{{kpi_id}}/parameters",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"me",
+								"kpis",
+								"{{kpi_id}}",
+								"parameters"
+							]
+						},
+						"description": "Get parameters for my KPI"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Parameter Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/me/kpis/{{kpi_id}}/parameters/{{parameter_id}}",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"me",
+								"kpis",
+								"{{kpi_id}}",
+								"parameters",
+								"{{parameter_id}}"
+							]
+						},
+						"description": "Get specific parameter details"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Overall KPI Progress",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/me/kpis/{{kpi_id}}/progresses",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"me",
+								"kpis",
+								"{{kpi_id}}",
+								"progresses"
+							]
+						},
+						"description": "Get all my progress records for a KPI"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "My Progress Reporting",
+			"item": [
+				{
+					"name": "Report My Progress",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data) {",
+									"        pm.environment.set('my_progress_id', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"progressValue\": 75,\n  \"notes\": \"Completed 75 out of 100 calls\",\n  \"comment\": \"On track to reach target\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/me/kpis/{{kpi_id}}/parameters/{{parameter_id}}/progresses",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"me",
+								"kpis",
+								"{{kpi_id}}",
+								"parameters",
+								"{{parameter_id}}",
+								"progresses"
+							]
+						},
+						"description": "Report my progress for a parameter"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Progress",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/me/kpis/{{kpi_id}}/parameters/{{parameter_id}}/progresses",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"me",
+								"kpis",
+								"{{kpi_id}}",
+								"parameters",
+								"{{parameter_id}}",
+								"progresses"
+							]
+						},
+						"description": "Get my current progress for a parameter"
+					},
+					"response": []
+				},
+				{
+					"name": "Update My Progress",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"progressValue\": 90,\n  \"notes\": \"Made significant progress, now at 90 calls\",\n  \"comment\": \"Almost completed\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/me/kpis/{{kpi_id}}/parameters/{{parameter_id}}/progresses",
+							"host": ["{{base_url}}"],
+							"path": [
+								"api",
+								"v1",
+								"me",
+								"kpis",
+								"{{kpi_id}}",
+								"parameters",
+								"{{parameter_id}}",
+								"progresses"
+							]
+						},
+						"description": "Update my progress report"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script",
+					"console.log('Request to:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"pm.test('Status code is valid', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('Response time is acceptable', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "employee_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "team_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "kpi_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "parameter_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "assignee_employee_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "progress_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "my_progress_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
