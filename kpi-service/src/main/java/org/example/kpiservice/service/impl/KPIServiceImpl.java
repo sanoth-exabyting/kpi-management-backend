@@ -35,6 +35,8 @@ public class KPIServiceImpl implements KPIService {
         private final org.example.kpiservice.secondary.repository.SecondaryEmployeeRepository secondaryEmployeeRepository;
         private final org.example.kpiservice.repository.KPIParameterRepository kpiParameterRepository;
         private final org.example.kpiservice.repository.EmployeeKPIParameterRepository employeeKPIParameterRepository;
+        private final org.example.kpiservice.service.EmailService emailService;
+        private final org.springframework.core.io.ResourceLoader resourceLoader;
 
         @Override
         @Transactional
@@ -474,7 +476,21 @@ public class KPIServiceImpl implements KPIService {
                 log.info("Created progress for parameter {} of KPI {} by employee {}", parameterId, kpiId, employeeId);
 
                 // Map to response
-                return mapToProgressResponse(savedProgress);
+                EmployeeKPIProgressResponse response = mapToProgressResponse(savedProgress);
+
+                // Send email notification to KPI creator
+                sendProgressUpdateEmail(
+                                currentEmployee,
+                                parameter.getKpi(),
+                                parameter,
+                                request.getProgressValue(),
+                                null, // No last progress value for creation
+                                request.getNotes(),
+                                request.getComment(),
+                                "kpi_progress_created.html",
+                                "New KPI Progress Submitted: " + parameter.getKpi().getName());
+
+                return response;
         }
 
         @Override
@@ -538,6 +554,9 @@ public class KPIServiceImpl implements KPIService {
                                         "You are not authorized to update this progress");
                 }
 
+                // Capture old progress value
+                Integer oldProgressValue = progress.getProgressValue();
+
                 // Update progress fields
                 progress.setProgressValue(request.getProgressValue());
                 progress.setNotes(request.getNotes());
@@ -558,7 +577,21 @@ public class KPIServiceImpl implements KPIService {
                 log.info("Updated progress for parameter {} of KPI {} by employee {}", parameterId, kpiId, employeeId);
 
                 // Map to response
-                return mapToProgressResponse(updatedProgress);
+                EmployeeKPIProgressResponse response = mapToProgressResponse(updatedProgress);
+
+                // Send email notification to KPI creator
+                sendProgressUpdateEmail(
+                                currentEmployee,
+                                parameter.getKpi(),
+                                parameter,
+                                request.getProgressValue(),
+                                oldProgressValue,
+                                request.getNotes(),
+                                request.getComment(),
+                                "kpi_progress_updated.html",
+                                "KPI Progress Updated: " + parameter.getKpi().getName());
+
+                return response;
         }
 
         @Override
@@ -735,5 +768,43 @@ public class KPIServiceImpl implements KPIService {
                                 .updatedBy(kpi.getUpdatedBy())
                                 .updatedAt(kpi.getUpdatedAt())
                                 .build();
+        }
+
+        private void sendProgressUpdateEmail(Employee updater, KPI kpi,
+                        org.example.kpiservice.entity.KPIParameter parameter, Integer progressValue,
+                        Integer lastProgressValue, String notes,
+                        String comment, String templateName, String subject) {
+                try {
+                        // Get KPI creator (Team Lead)
+                        Employee creator = employeeRepository.findById(kpi.getCreatedBy())
+                                        .orElseThrow(() -> new RuntimeException("KPI creator not found"));
+
+                        // Load template
+                        org.springframework.core.io.Resource resource = resourceLoader
+                                        .getResource("classpath:templates/" + templateName);
+                        String template = org.springframework.util.StreamUtils.copyToString(resource.getInputStream(),
+                                        java.nio.charset.StandardCharsets.UTF_8);
+
+                        // Replace placeholders
+                        String htmlBody = template
+                                        .replace("{{teamLeadName}}", creator.getName())
+                                        .replace("{{employeeName}}", updater.getName())
+                                        .replace("{{employeeId}}", updater.getEmployeeId())
+                                        .replace("{{kpiName}}", kpi.getName())
+                                        .replace("{{parameterName}}", parameter.getName())
+                                        .replace("{{progressValue}}", String.valueOf(progressValue))
+                                        .replace("{{lastProgressValue}}",
+                                                        lastProgressValue != null ? String.valueOf(lastProgressValue)
+                                                                        : "N/A")
+                                        .replace("{{notes}}", notes != null ? notes : "N/A")
+                                        .replace("{{comment}}", comment != null ? comment : "N/A");
+
+                        // Send email
+                        emailService.sendHtmlMessage(creator.getEmail(), subject, htmlBody);
+
+                } catch (Exception e) {
+                        log.error("Failed to send progress update email for KPI {}: {}", kpi.getId(), e.getMessage());
+                        // Don't rethrow, as we don't want to fail the progress update if email fails
+                }
         }
 }

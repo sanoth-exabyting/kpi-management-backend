@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .header {
+            background-color: #e3f2fd;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .content {
+            margin-top: 20px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .info-table th,
+        .info-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-table th {
+            width: 30%;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>New KPI Progress Submitted</h2>
+        </div>
+        <div class="content">
+            <p>Hello {{teamLeadName}},</p>
+            <p>An employee has submitted a new progress update for a KPI parameter.</p>
+
+            <table class="info-table">
+                <tr>
+                    <th>Employee Name</th>
+                    <td>{{employeeName}}</td>
+                </tr>
+                <tr>
+                    <th>Employee ID</th>
+                    <td>{{employeeId}}</td>
+                </tr>
+                <tr>
+                    <th>KPI Name</th>
+                    <td>{{kpiName}}</td>
+                </tr>
+                <tr>
+                    <th>Parameter</th>
+                    <td>{{parameterName}}</td>
+                </tr>
+                <tr>
+                    <th>Progress Value</th>
+                    <td>{{progressValue}}</td>
+                </tr>
+                <tr>
+                    <th>Notes</th>
+                    <td>{{notes}}</td>
+                </tr>
+                <tr>
+                    <th>Comments</th>
+                    <td>{{comment}}</td>
+                </tr>
+            </table>
+
+            <p>Please review the submission in the KPI Management System.</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+
+</html>
