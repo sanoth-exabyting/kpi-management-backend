@@ -10,6 +10,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.core.io.ByteArrayResource;
 
 @Service
 @RequiredArgsConstructor
@@ -58,7 +59,7 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(body, true);
 
             // Add attachment
-            helper.addAttachment(filename, new org.springframework.core.io.ByteArrayResource(attachment));
+            helper.addAttachment(filename, new ByteArrayResource(attachment));
 
             emailSender.send(message);
             log.info("Email with attachment sent to {}", to);
