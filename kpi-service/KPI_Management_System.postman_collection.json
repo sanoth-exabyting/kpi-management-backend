@@ -111,7 +111,7 @@
 								"exec": [
 									"if (pm.response.code === 201) {",
 									"    const response = pm.response.json();",
-									"    pm.environment.set('access_token', response.accessToken);",
+									"    pm.environment.set('access_token', response.data.accessToken);",
 									"    pm.environment.set('refresh_token', response.refreshToken);",
 									"}"
 								],

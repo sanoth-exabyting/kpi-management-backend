@@ -141,7 +141,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Assignee ID</th>
+                                <th>Assignee</th>
                                 <th>Progress</th>
                                 <th>Notes</th>
                                 <th>Last Updated</th>
@@ -149,7 +149,12 @@
                         </thead>
                         <tbody>
                             <tr th:each="progress : ${parameterProgressMap.get(param.id)}">
-                                <td th:text="${progress.employeeId}">Emp ID</td>
+                                <td>
+                                    <span
+                                        th:text="${assigneeNameMap.getOrDefault(progress.employeeId, 'Unknown')}">Name</span>
+                                    <span style="color: #888; font-size: 10px;"
+                                        th:text="'(' + ${progress.employeeId} + ')'">(ID)</span>
+                                </td>
                                 <td th:text="${progress.progressValue}">50</td>
                                 <td th:text="${progress.notes}">Notes</td>
                                 <td th:text="${#dates.format(progress.updatedAt, 'yyyy-MM-dd HH:mm')}">Date</td>

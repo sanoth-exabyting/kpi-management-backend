@@ -11,6 +11,7 @@ import org.example.kpiservice.repository.EmployeeKPIParameterRepository;
 import org.example.kpiservice.repository.EmployeeRepository;
 import org.example.kpiservice.repository.KPIParameterRepository;
 import org.example.kpiservice.repository.KPIRepository;
+import org.example.kpiservice.secondary.repository.SecondaryEmployeeRepository;
 import org.example.kpiservice.service.EmailService;
 import org.example.kpiservice.service.KPIReportService;
 import org.example.kpiservice.service.PdfGenerationService;
@@ -34,6 +35,7 @@ public class KPIReportServiceImpl implements KPIReportService {
     private final EmployeeRepository employeeRepository;
     private final KPIParameterRepository kpiParameterRepository;
     private final EmployeeKPIParameterRepository employeeKPIParameterRepository;
+    private final SecondaryEmployeeRepository secondaryEmployeeRepository;
     private final PdfGenerationService pdfGenerationService;
     private final EmailService emailService;
 
@@ -72,27 +74,25 @@ public class KPIReportServiceImpl implements KPIReportService {
         Map<Long, List<EmployeeKPIParameter>> parameterProgressMap = allProgress.stream()
                 .collect(Collectors.groupingBy(p -> p.getKpiParameter().getId()));
 
-        // Also need employee details for assignees.
-        // The EmployeeKPIParameter has employeeId (String), but we might want names.
-        // For now, we'll use employeeId or fetch names if needed.
-        // Given constraints, let's fetch assignee details from Secondary DB or just use
-        // ID/Name if available.
-        // EmployeeKPIParameter only has employeeId string.
-        // We should fetch assignee names.
-        List<String> assigneeIds = allProgress.stream().map(EmployeeKPIParameter::getEmployeeId).distinct().toList();
-        // We can't easily fetch from secondary repo here without injecting it.
-        // Let's inject SecondaryEmployeeRepository if we want names, or just use IDs.
-        // "KPI Report Content: KPI assignees".
-        // Using IDs is acceptable if names are not easily available, but names are
-        // better.
-        // I'll skip fetching names for now to keep it simple and concise as per "No
-        // unnecessary code".
-        // If user wants names, I can add it. But wait, "KPI assignees" implies knowing
-        // who they are.
-        // I will assume employeeId is sufficient or I can fetch them.
-        // Actually, let's just use the data we have.
+        // 6. Fetch Assignee Names
+        List<String> assigneeIds = allProgress.stream()
+                .map(EmployeeKPIParameter::getEmployeeId)
+                .distinct()
+                .toList();
 
-        // 6. Generate and Send Reports
+        Map<String, String> assigneeNameMap = Map.of();
+        if (!assigneeIds.isEmpty()) {
+            List<org.example.kpiservice.secondary.entity.Employee> assignees = secondaryEmployeeRepository
+                    .findAllByEmployeeIdIn(assigneeIds);
+            assigneeNameMap = assignees.stream()
+                    .collect(Collectors.toMap(
+                            org.example.kpiservice.secondary.entity.Employee::getEmployeeId,
+                            org.example.kpiservice.secondary.entity.Employee::getName,
+                            (existing, replacement) -> existing // Keep existing in case of duplicates
+                    ));
+        }
+
+        // 7. Generate and Send Reports
         for (Map.Entry<Long, List<KPI>> entry : kpisByCreator.entrySet()) {
             Long creatorId = entry.getKey();
             List<KPI> creatorKpis = entry.getValue();
@@ -104,7 +104,7 @@ public class KPIReportServiceImpl implements KPIReportService {
             }
 
             try {
-                generateAndSendReport(creator, creatorKpis, kpiParametersMap, parameterProgressMap);
+                generateAndSendReport(creator, creatorKpis, kpiParametersMap, parameterProgressMap, assigneeNameMap);
             } catch (Exception e) {
                 log.error("Failed to generate/send report for creator {}", creator.getEmail(), e);
             }
@@ -115,7 +115,8 @@ public class KPIReportServiceImpl implements KPIReportService {
 
     private void generateAndSendReport(Employee creator, List<KPI> kpis,
             Map<Long, List<KPIParameter>> kpiParametersMap,
-            Map<Long, List<EmployeeKPIParameter>> parameterProgressMap) {
+            Map<Long, List<EmployeeKPIParameter>> parameterProgressMap,
+            Map<String, String> assigneeNameMap) {
 
         Context context = new Context();
         context.setVariable("creatorName", creator.getName());
@@ -123,6 +124,7 @@ public class KPIReportServiceImpl implements KPIReportService {
         context.setVariable("kpis", kpis);
         context.setVariable("kpiParametersMap", kpiParametersMap);
         context.setVariable("parameterProgressMap", parameterProgressMap);
+        context.setVariable("assigneeNameMap", assigneeNameMap);
 
         byte[] pdfBytes = pdfGenerationService.generatePdfFromTemplate("kpi_monthly_report", context);
 
