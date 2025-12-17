@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #555;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .meta-info {
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .kpi-section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+
+        .sub-header {
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .no-data {
+            font-style: italic;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Monthly KPI Report</h1>
+        <div class="meta-info">
+            <p>Generated for: <span th:text="${creatorName}">Creator Name</span></p>
+            <p>Date: <span th:text="${reportDate}">January 2024</span></p>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(kpis)}">
+        <p>No active KPIs found for this month.</p>
+    </div>
+
+    <div th:each="kpi : ${kpis}" class="kpi-section">
+        <h2 th:text="${kpi.name}">KPI Name</h2>
+
+        <table>
+            <tr>
+                <th width="20%">Description</th>
+                <td th:text="${kpi.description}">Description</td>
+            </tr>
+            <tr>
+                <th>Period</th>
+                <td>
+                    <span th:text="${#dates.format(kpi.startAt, 'yyyy-MM-dd')}">Start</span> to
+                    <span th:text="${#dates.format(kpi.endAt, 'yyyy-MM-dd')}">End</span>
+                </td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td th:text="${kpi.status}">ACTIVE</td>
+            </tr>
+        </table>
+
+        <div class="sub-header">Parameters</div>
+        <table th:if="${not #lists.isEmpty(kpiParametersMap.get(kpi.id))}">
+            <thead>
+                <tr>
+                    <th>Parameter Name</th>
+                    <th>Description</th>
+                    <th>Target Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="param : ${kpiParametersMap.get(kpi.id)}">
+                    <td th:text="${param.name}">Param Name</td>
+                    <td th:text="${param.description}">Desc</td>
+                    <td th:text="${param.targetValue}">100</td>
+                </tr>
+            </tbody>
+        </table>
+        <div th:if="${#lists.isEmpty(kpiParametersMap.get(kpi.id))}" class="no-data">
+            No parameters defined.
+        </div>
+
+        <div class="sub-header">Assignee Progress</div>
+        <!-- We need to iterate over parameters to show progress for each, or just list all progress entries for this KPI -->
+        <!-- Since progress is linked to parameter, let's iterate parameters and show progress for each -->
+
+        <div th:if="${not #lists.isEmpty(kpiParametersMap.get(kpi.id))}">
+            <div th:each="param : ${kpiParametersMap.get(kpi.id)}">
+                <div th:if="${not #lists.isEmpty(parameterProgressMap.get(param.id))}">
+                    <p style="margin: 5px 0; font-weight: bold; font-size: 11px;"
+                        th:text="'Parameter: ' + ${param.name}"></p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Assignee ID</th>
+                                <th>Progress</th>
+                                <th>Notes</th>
+                                <th>Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="progress : ${parameterProgressMap.get(param.id)}">
+                                <td th:text="${progress.employeeId}">Emp ID</td>
+                                <td th:text="${progress.progressValue}">50</td>
+                                <td th:text="${progress.notes}">Notes</td>
+                                <td th:text="${#dates.format(progress.updatedAt, 'yyyy-MM-dd HH:mm')}">Date</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Check if any progress exists at all for this KPI -->
+        <!-- This is a bit complex in Thymeleaf without a helper, but the above nested loop covers it per parameter -->
+    </div>
+
+</body>
+
+</html>

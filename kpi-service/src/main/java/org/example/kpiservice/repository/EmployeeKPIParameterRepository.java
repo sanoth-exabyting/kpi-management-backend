@@ -18,4 +18,6 @@ public interface EmployeeKPIParameterRepository extends JpaRepository<EmployeeKP
             @Param("employeeId") String employeeId);
 
     java.util.Optional<EmployeeKPIParameter> findByKpiParameterIdAndEmployeeId(Long kpiParameterId, String employeeId);
+
+    List<EmployeeKPIParameter> findAllByKpiParameterKpiIdIn(List<Long> kpiIds);
 }

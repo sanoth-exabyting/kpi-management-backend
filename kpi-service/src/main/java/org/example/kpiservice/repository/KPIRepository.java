@@ -11,4 +11,6 @@ import java.util.List;
 public interface KPIRepository extends JpaRepository<KPI, Long> {
 
     List<KPI> findAllByCreatedBy(Long createdBy);
+
+    List<KPI> findAllByStatusAndIsDeletedFalse(KPIStatus status);
 }

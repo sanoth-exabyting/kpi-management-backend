@@ -25,8 +25,8 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendHtmlMessage(String to, String subject, String htmlBody) {
         try {
-//            todo:need to remove this line in production
-            to ="sanoth14@cse.pstu.ac.bd";
+            // todo:need to remove this line in production
+            to = "sanoth14@cse.pstu.ac.bd";
             MimeMessage message = emailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setFrom(fromEmail);
@@ -39,6 +39,33 @@ public class EmailServiceImpl implements EmailService {
             log.error("Failed to send HTML email to {}: {}", to, e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error sending HTML email to {}: {}", to, e.getMessage());
+        }
+    }
+
+    @Async
+    @Override
+    public void sendEmailWithAttachment(String to, String subject, String body, String filename, byte[] attachment) {
+        try {
+            // todo:need to remove this line in production
+            to = "sanoth14@cse.pstu.ac.bd";
+
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, true);
+
+            // Add attachment
+            helper.addAttachment(filename, new org.springframework.core.io.ByteArrayResource(attachment));
+
+            emailSender.send(message);
+            log.info("Email with attachment sent to {}", to);
+        } catch (MessagingException e) {
+            log.error("Failed to send email with attachment to {}: {}", to, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error sending email with attachment to {}: {}", to, e.getMessage());
         }
     }
 }

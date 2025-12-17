@@ -10,4 +10,6 @@ import java.util.List;
 public interface KPIParameterRepository extends JpaRepository<KPIParameter, Long> {
 
     List<KPIParameter> findAllByKpiId(Long kpiId);
+
+    List<KPIParameter> findAllByKpiIdIn(List<Long> kpiIds);
 }
